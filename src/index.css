@@ -212,11 +212,17 @@
   }
 
   .fc .fc-col-header-cell {
-    @apply bg-muted/50 border-border px-2 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground;
+    @apply bg-muted border-border px-2 py-2.5 text-xs font-semibold uppercase tracking-wider;
   }
 
   .fc .fc-col-header-cell-cushion {
-    @apply no-underline;
+    @apply text-foreground no-underline;
+  }
+
+  /* Weekend headers slightly de-emphasized but still readable */
+  .fc .fc-day-sat .fc-col-header-cell-cushion,
+  .fc .fc-day-sun .fc-col-header-cell-cushion {
+    @apply text-muted-foreground;
   }
 
   .fc .fc-daygrid-day {
@@ -270,6 +276,23 @@
 
   .fc .fc-daygrid-event .fc-event-time {
     @apply font-normal opacity-70;
+  }
+
+  /* Own vs other members' reservations (Req 7.3) — WCAG AA token colors */
+  .fc .fc-event-own {
+    @apply !border-l-2 !border-l-primary !bg-primary/15 !text-primary;
+  }
+
+  .fc .fc-event-own:hover {
+    @apply !bg-primary/25;
+  }
+
+  .fc .fc-event-other {
+    @apply !border-l-2 !border-l-secondary !bg-secondary/15 !text-secondary;
+  }
+
+  .fc .fc-event-other:hover {
+    @apply !bg-secondary/25;
   }
 
   .fc .fc-timegrid-event {

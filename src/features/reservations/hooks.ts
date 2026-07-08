@@ -2,8 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { toUtcISOString } from '@/lib/utils'
-import type { Reservation, Space } from '@/types'
+import type { Reservation, Space, Profile } from '@/types'
 import type { ReservationSearchValues } from './schemas'
+
+export type AttendeeProfile = Pick<Profile, 'id' | 'full_name' | 'email'>
 
 export function useAvailableSpaces(params: ReservationSearchValues | null) {
   const profile = useAuthStore((s) => s.profile)
@@ -56,6 +58,115 @@ export function useAvailableSpaces(params: ReservationSearchValues | null) {
   })
 }
 
+export interface AlternativeSlot {
+  date: string
+  start_time: string
+  end_time: string
+}
+
+/**
+ * Suggests up to 3 alternative time windows within ±24h of the requested one
+ * (same duration, business hours 08:00–20:00) where at least one active space
+ * of the requested type is free. Used when a search returns no availability
+ * (Req 5.4).
+ */
+export function useAlternativeSlots(
+  params: ReservationSearchValues | null,
+  enabled: boolean
+) {
+  const profile = useAuthStore((s) => s.profile)
+
+  return useQuery({
+    queryKey: ['alternative-slots', profile?.org_id, params],
+    queryFn: async (): Promise<AlternativeSlot[]> => {
+      if (!params || !profile?.org_id) return []
+
+      const reqStart = new Date(`${params.date}T${params.start_time}`)
+      const reqEnd = new Date(`${params.date}T${params.end_time}`)
+      const durationMs = reqEnd.getTime() - reqStart.getTime()
+      if (durationMs <= 0) return []
+
+      const DAY_MS = 24 * 60 * 60 * 1000
+      const windowStart = new Date(reqStart.getTime() - DAY_MS)
+      const windowEnd = new Date(reqEnd.getTime() + DAY_MS)
+
+      // Active spaces of the requested type
+      let spacesQuery = supabase
+        .from('spaces')
+        .select('id')
+        .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+      if (params.space_type) spacesQuery = spacesQuery.eq('type', params.space_type)
+      const { data: spaces } = await spacesQuery
+      const spaceIds = spaces?.map((s) => s.id) ?? []
+      if (spaceIds.length === 0) return []
+
+      // Confirmed reservations intersecting the ±24h window
+      const { data: res } = await supabase
+        .from('reservations')
+        .select('space_id, start_time, end_time')
+        .eq('org_id', profile.org_id)
+        .eq('status', 'confirmed')
+        .lt('start_time', windowEnd.toISOString())
+        .gt('end_time', windowStart.toISOString())
+      const reservations = res ?? []
+
+      const now = Date.now()
+      const pad = (n: number) => String(n).padStart(2, '0')
+      const candidates: Array<AlternativeSlot & { startMs: number }> = []
+
+      for (let dayOffset = -1; dayOffset <= 1; dayOffset++) {
+        for (let hour = 8; hour <= 20; hour++) {
+          const cStart = new Date(reqStart)
+          cStart.setDate(cStart.getDate() + dayOffset)
+          cStart.setHours(hour, 0, 0, 0)
+          const cEnd = new Date(cStart.getTime() + durationMs)
+
+          const endLimit = new Date(cStart)
+          endLimit.setHours(20, 0, 0, 0)
+          if (cEnd > endLimit) continue
+          if (Math.abs(cStart.getTime() - reqStart.getTime()) > DAY_MS) continue
+          if (cStart.getTime() === reqStart.getTime()) continue
+          if (cStart.getTime() <= now) continue
+
+          const cStartISO = cStart.toISOString()
+          const cEndISO = cEnd.toISOString()
+          const hasFreeSpace = spaceIds.some(
+            (id) =>
+              !reservations.some(
+                (r) =>
+                  r.space_id === id &&
+                  r.start_time < cEndISO &&
+                  r.end_time > cStartISO
+              )
+          )
+          if (!hasFreeSpace) continue
+
+          candidates.push({
+            date: `${cStart.getFullYear()}-${pad(cStart.getMonth() + 1)}-${pad(cStart.getDate())}`,
+            start_time: `${pad(cStart.getHours())}:${pad(cStart.getMinutes())}`,
+            end_time: `${pad(cEnd.getHours())}:${pad(cEnd.getMinutes())}`,
+            startMs: cStart.getTime(),
+          })
+        }
+      }
+
+      candidates.sort(
+        (a, b) =>
+          Math.abs(a.startMs - reqStart.getTime()) -
+          Math.abs(b.startMs - reqStart.getTime())
+      )
+
+      return candidates.slice(0, 3).map(({ date, start_time, end_time }) => ({
+        date,
+        start_time,
+        end_time,
+      }))
+    },
+    enabled: enabled && !!params && !!profile?.org_id,
+  })
+}
+
 export function useMyReservations() {
   const profile = useAuthStore((s) => s.profile)
 
@@ -95,6 +206,27 @@ export function useOrgReservations() {
   })
 }
 
+export function useReservationAttendees(reservationId: string | null) {
+  return useQuery({
+    queryKey: ['reservation-attendees', reservationId],
+    queryFn: async (): Promise<AttendeeProfile[]> => {
+      const { data, error } = await supabase
+        .from('reservation_attendees')
+        .select('profile:profiles(id, full_name, email)')
+        .eq('reservation_id', reservationId!)
+
+      if (error) throw error
+      const rows = (data ?? []) as unknown as Array<{
+        profile: AttendeeProfile | AttendeeProfile[] | null
+      }>
+      return rows
+        .map((r) => (Array.isArray(r.profile) ? r.profile[0] : r.profile))
+        .filter((p): p is AttendeeProfile => !!p)
+    },
+    enabled: !!reservationId,
+  })
+}
+
 export function useCreateReservation() {
   const queryClient = useQueryClient()
   const profile = useAuthStore((s) => s.profile)
@@ -106,12 +238,14 @@ export function useCreateReservation() {
       startTime,
       endTime,
       summary,
+      attendeeIds,
     }: {
       spaceId: string
       date: string
       startTime: string
       endTime: string
       summary?: string
+      attendeeIds?: string[]
     }) => {
       if (!profile) throw new Error('El espacio ya no está disponible')
 
@@ -153,6 +287,14 @@ export function useCreateReservation() {
         }
         throw error
       }
+
+      // Best-effort: attach attendees so invited members can see the meeting.
+      if (attendeeIds && attendeeIds.length > 0 && data?.id) {
+        await supabase.from('reservation_attendees').insert(
+          attendeeIds.map((uid) => ({ reservation_id: data.id, user_id: uid }))
+        )
+      }
+
       return data as Reservation
     },
     onSuccess: () => {

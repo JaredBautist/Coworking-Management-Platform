@@ -1,6 +1,11 @@
 import { useState, useMemo } from 'react'
-import { useOrgReservations, useCreateReservation } from '@/features/reservations/hooks'
+import {
+  useOrgReservations,
+  useCreateReservation,
+  useReservationAttendees,
+} from '@/features/reservations/hooks'
 import { useSpaces } from '@/features/spaces/hooks'
+import { useTeamMembers } from '@/features/team/hooks'
 import { useAuthStore } from '@/stores/authStore'
 import { useRole } from '@/hooks/useRole'
 import { useUIStore } from '@/stores/uiStore'
@@ -12,6 +17,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import type { DateSelectArg, EventClickArg } from '@fullcalendar/core'
+import type { SpaceType } from '@/types'
 import {
   PageHeader,
   Card,
@@ -29,6 +35,7 @@ export default function CalendarPage() {
   const { isOfficeManager } = useRole()
   const { data: reservations, isLoading } = useOrgReservations()
   const { data: spaces } = useSpaces()
+  const { data: orgMembers } = useTeamMembers()
   const createReservation = useCreateReservation()
   const addToast = useUIStore((s) => s.addToast)
   const queryClient = useQueryClient()
@@ -48,12 +55,15 @@ export default function CalendarPage() {
     userName?: string
     userId?: string
     spaceName?: string
-    spaceType?: string
+    spaceType?: SpaceType
   } | null>(null)
 
   const [formSpace, setFormSpace] = useState('')
   const [formSummary, setFormSummary] = useState('')
+  const [formAttendees, setFormAttendees] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { data: eventAttendees } = useReservationAttendees(selectedEvent?.id ?? null)
 
   const events = useMemo(() => {
     if (!reservations) return []
@@ -87,6 +97,7 @@ export default function CalendarPage() {
     })
     setFormSpace('')
     setFormSummary('')
+    setFormAttendees([])
     setSelectedEvent(null)
   }
 
@@ -116,11 +127,13 @@ export default function CalendarPage() {
         startTime: selectedSlot.startStr.split('T')[1]?.slice(0, 5) || '09:00',
         endTime: selectedSlot.endStr.split('T')[1]?.slice(0, 5) || '10:00',
         summary: formSummary || undefined,
+        attendeeIds: formAttendees.length > 0 ? formAttendees : undefined,
       })
       addToast({ type: 'success', message: t('calendar.reservationCreated') })
       setSelectedSlot(null)
       setFormSpace('')
       setFormSummary('')
+      setFormAttendees([])
       queryClient.invalidateQueries({ queryKey: ['org-reservations'] })
     } catch {
       addToast({ type: 'error', message: t('calendar.reservationError') })
@@ -163,6 +176,20 @@ export default function CalendarPage() {
         <div className="min-w-0 flex-1">
           <Card>
             <CardContent className="p-4">
+              <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-primary" />
+                  {t('calendar.yourReservations')}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-secondary" />
+                  {t('calendar.otherReservations')}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm border border-border bg-surface" />
+                  {t('calendar.availableHours')}
+                </span>
+              </div>
               <FullCalendar
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                 initialView="dayGridMonth"
@@ -261,6 +288,41 @@ export default function CalendarPage() {
                   />
                 </FormField>
 
+                {orgMembers && orgMembers.length > 1 && (
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {t('calendar.inviteAttendees')}
+                    </p>
+                    <p className="mb-1.5 text-xs text-muted-foreground">
+                      {t('calendar.attendeesHint')}
+                    </p>
+                    <div className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
+                      {orgMembers
+                        .filter((m) => m.id !== profile?.id)
+                        .map((m) => (
+                          <label
+                            key={m.id}
+                            className="flex cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 text-sm hover:bg-muted"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formAttendees.includes(m.id)}
+                              onChange={(e) =>
+                                setFormAttendees((prev) =>
+                                  e.target.checked
+                                    ? [...prev, m.id]
+                                    : prev.filter((id) => id !== m.id)
+                                )
+                              }
+                              className="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-primary/20"
+                            />
+                            <span className="truncate text-foreground">{m.full_name}</span>
+                          </label>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
                 <Button
                   fullWidth
                   onClick={handleCreateReservation}
@@ -285,44 +347,78 @@ export default function CalendarPage() {
                 </Button>
               </div>
 
-              <div className="space-y-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">{t('calendar.space')}</span>
-                  <p className="font-medium text-foreground">{selectedEvent.spaceName || selectedEvent.title}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">{t('calendar.schedule')}</span>
-                  <p className="font-medium text-foreground">
-                    {new Date(selectedEvent.start).toLocaleTimeString(locale, {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}{' '}
-                    -{' '}
-                    {new Date(selectedEvent.end).toLocaleTimeString(locale, {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-                {selectedEvent.summary && (
-                  <div>
-                    <span className="text-muted-foreground">{t('calendar.summary')}</span>
-                    <p className="text-foreground">{selectedEvent.summary}</p>
+              {(() => {
+                // Privacy (Req 7.7): a member may only see the space TYPE and
+                // time interval of other members' reservations — no personal
+                // data. Managers (and the owner) see full details.
+                const isAttendee =
+                  eventAttendees?.some((a) => a.id === profile?.id) ?? false
+                const isOwnEvent = selectedEvent.userId === profile?.id
+                const canSeeDetails = isOfficeManager || isOwnEvent || isAttendee
+                return (
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">{t('calendar.space')}</span>
+                      <p className="font-medium text-foreground">
+                        {canSeeDetails
+                          ? selectedEvent.spaceName || selectedEvent.title
+                          : selectedEvent.spaceType
+                            ? t(`spaceType.${selectedEvent.spaceType}`)
+                            : t('calendar.space')}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('calendar.schedule')}</span>
+                      <p className="font-medium text-foreground">
+                        {new Date(selectedEvent.start).toLocaleTimeString(locale, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}{' '}
+                        -{' '}
+                        {new Date(selectedEvent.end).toLocaleTimeString(locale, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                    {canSeeDetails && selectedEvent.summary && (
+                      <div>
+                        <span className="text-muted-foreground">{t('calendar.summary')}</span>
+                        <p className="text-foreground">{selectedEvent.summary}</p>
+                      </div>
+                    )}
+                    {isOfficeManager && selectedEvent.userName && (
+                      <div>
+                        <span className="text-muted-foreground">{t('calendar.reservedBy')}</span>
+                        <p className="text-foreground">{selectedEvent.userName}</p>
+                      </div>
+                    )}
+                    {canSeeDetails && eventAttendees && eventAttendees.length > 0 && (
+                      <div>
+                        <span className="text-muted-foreground">{t('calendar.attendees')}</span>
+                        <ul className="mt-1 space-y-0.5">
+                          {eventAttendees.map((a) => (
+                            <li key={a.id} className="text-foreground">
+                              {a.full_name}
+                              {a.id === profile?.id && (
+                                <span className="ml-1 text-xs text-muted-foreground">
+                                  {t('common.you')}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-muted-foreground">{t('calendar.status')}</span>
+                      <div className="mt-1">
+                        <Badge tone="success">{t('calendar.confirmed')}</Badge>
+                      </div>
+                    </div>
                   </div>
-                )}
-                {selectedEvent.userName && (
-                  <div>
-                    <span className="text-muted-foreground">{t('calendar.reservedBy')}</span>
-                    <p className="text-foreground">{selectedEvent.userName}</p>
-                  </div>
-                )}
-                <div>
-                  <span className="text-muted-foreground">{t('calendar.status')}</span>
-                  <div className="mt-1">
-                    <Badge tone="success">{t('calendar.confirmed')}</Badge>
-                  </div>
-                </div>
-              </div>
+                )
+              })()}
             </CardContent>
           </Card>
         )}

@@ -66,6 +66,18 @@ export default function SignUpPage() {
       return
     }
 
+    // Supabase anti-enumeration: an already-registered email returns a user
+    // with an empty `identities` array and no session/error. Surface a clear
+    // message instead of the misleading "check your email" screen.
+    if (
+      authData.user &&
+      !authData.session &&
+      authData.user.identities?.length === 0
+    ) {
+      setServerError(t('auth.signup.alreadyRegistered'))
+      return
+    }
+
     if (authData.session) {
       setSession(authData.session)
       const { data: profile } = await supabase

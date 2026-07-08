@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useSpaces } from './hooks'
+import { useSpaces, useDeleteSpace } from './hooks'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { supabase } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import { useUIStore } from '@/stores/uiStore'
-import { Plus, Pencil, Building2 } from 'lucide-react'
+import { Plus, Pencil, Building2, Trash2 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import {
   PageHeader,
@@ -30,11 +30,17 @@ export default function SpacesPage() {
   const { data: spaces, isLoading } = useSpaces()
   const queryClient = useQueryClient()
   const addToast = useUIStore((s) => s.addToast)
+  const deleteSpace = useDeleteSpace()
   const [page, setPage] = useState(1)
   const [deactivateTarget, setDeactivateTarget] = useState<{
     id: string
     name: string
     futureReservations: number
+  } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string
+    name: string
+    reservations: number
   } | null>(null)
 
   if (isLoading) return <SkeletonTable rows={5} />
@@ -73,6 +79,26 @@ export default function SpacesPage() {
     queryClient.invalidateQueries({ queryKey: ['spaces'] })
     addToast({ type: 'success', message: t('spaces.deactivatedSuccess') })
     setDeactivateTarget(null)
+  }
+
+  const openDeleteDialog = async (spaceId: string, spaceName: string) => {
+    const { count } = await supabase
+      .from('reservations')
+      .select('*', { count: 'exact', head: true })
+      .eq('space_id', spaceId)
+
+    setDeleteTarget({ id: spaceId, name: spaceName, reservations: count ?? 0 })
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await deleteSpace.mutateAsync(deleteTarget.id)
+      addToast({ type: 'success', message: t('spaces.deletedSuccess') })
+    } catch {
+      addToast({ type: 'error', message: t('spaces.deleteError') })
+    }
+    setDeleteTarget(null)
   }
 
   const checkFutureReservations = async (spaceId: string, spaceName: string) => {
@@ -158,6 +184,15 @@ export default function SpacesPage() {
                         {t('common.deactivate')}
                       </Button>
                     )}
+                    <Button
+                      variant="destructive-ghost"
+                      size="icon"
+                      onClick={() => openDeleteDialog(space.id, space.name)}
+                      aria-label={t('common.delete')}
+                      title={t('common.delete')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </TD>
               </TR>
@@ -188,6 +223,22 @@ export default function SpacesPage() {
           if (deactivateTarget) handleDeactivate(deactivateTarget.id)
         }}
         onCancel={() => setDeactivateTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title={t('spaces.deleteTitle')}
+        message={
+          deleteTarget
+            ? deleteTarget.reservations > 0
+              ? t('spaces.deleteWithReservations', { name: deleteTarget.name, count: String(deleteTarget.reservations) })
+              : t('spaces.deleteConfirm', { name: deleteTarget.name })
+            : ''
+        }
+        confirmLabel={t('common.delete')}
+        variant="destructive"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   )

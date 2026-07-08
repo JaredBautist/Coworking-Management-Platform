@@ -51,6 +51,16 @@ export interface SpaceUtilization {
   occupancy_rate?: number | null
 }
 
+export interface Invitation {
+  id: string
+  org_id: string
+  email: string
+  role: UserRole
+  invited_by: string | null
+  status: 'pending' | 'accepted'
+  created_at: string
+}
+
 export interface AuthUser {
   id: string
   email: string

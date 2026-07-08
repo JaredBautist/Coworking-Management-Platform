@@ -52,6 +52,21 @@ export function useCreateSpace() {
   })
 }
 
+export function useDeleteSpace() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('spaces').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['spaces'] })
+      queryClient.invalidateQueries({ queryKey: ['org-reservations'] })
+    },
+  })
+}
+
 export function useUpdateSpace() {
   const queryClient = useQueryClient()
 

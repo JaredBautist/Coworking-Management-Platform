@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
-import type { Profile } from '@/types'
+import type { Profile, Invitation, UserRole } from '@/types'
 
 export function useTeamMembers() {
   const profile = useAuthStore((s) => s.profile)
@@ -20,6 +20,61 @@ export function useTeamMembers() {
     },
     enabled: !!profile?.org_id,
     staleTime: 30_000,
+  })
+}
+
+export function useInvitations() {
+  const profile = useAuthStore((s) => s.profile)
+
+  return useQuery({
+    queryKey: ['invitations', profile?.org_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('org_id', profile!.org_id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data as Invitation[]
+    },
+    enabled: !!profile?.org_id,
+  })
+}
+
+export function useInviteMember() {
+  const queryClient = useQueryClient()
+  const profile = useAuthStore((s) => s.profile)
+
+  return useMutation({
+    mutationFn: async ({ email, role }: { email: string; role: UserRole }) => {
+      if (!profile?.org_id) throw new Error('No hay una sesión activa.')
+      const { error } = await supabase.from('invitations').insert({
+        org_id: profile.org_id,
+        email: email.trim().toLowerCase(),
+        role,
+        invited_by: profile.id,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invitations'] })
+    },
+  })
+}
+
+export function useCancelInvitation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('invitations').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invitations'] })
+    },
   })
 }
 

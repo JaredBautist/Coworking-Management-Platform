@@ -7,18 +7,20 @@ export function useAuth() {
     useAuthStore()
 
   useEffect(() => {
+    const loadProfile = (userId: string) => {
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+        .then(({ data }) => {
+          if (data) setProfile(data)
+        })
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session?.user) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => {
-            if (data) setProfile(data)
-          })
-      }
+      if (session?.user) loadProfile(session.user.id)
       useAuthStore.setState({ isLoading: false })
     })
 
@@ -26,7 +28,13 @@ export function useAuth() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (!session) clear()
+      if (session?.user) {
+        // Defer the Supabase call: calling it synchronously inside the
+        // auth callback can deadlock the client.
+        setTimeout(() => loadProfile(session.user.id), 0)
+      } else {
+        clear()
+      }
     })
 
     return () => subscription.unsubscribe()

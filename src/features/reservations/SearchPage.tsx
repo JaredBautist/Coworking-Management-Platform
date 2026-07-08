@@ -5,7 +5,7 @@ import {
   ReservationSearchSchema,
   type ReservationSearchValues,
 } from './schemas'
-import { useAvailableSpaces, useCreateReservation } from './hooks'
+import { useAvailableSpaces, useCreateReservation, useAlternativeSlots, type AlternativeSlot } from './hooks'
 import { SkeletonCard } from '@/components/shared/SkeletonCard'
 import { useUIStore } from '@/stores/uiStore'
 import { useI18n } from '@/lib/i18n'
@@ -35,12 +35,24 @@ export default function SearchPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ReservationSearchValues>({
     resolver: zodResolver(ReservationSearchSchema),
   })
 
   const { data: availableSpaces, isLoading } = useAvailableSpaces(searchParams)
+
+  const noResults = !isLoading && !!searchParams && availableSpaces?.length === 0
+  const { data: alternatives } = useAlternativeSlots(searchParams, noResults)
+
+  const applyAlternative = (slot: AlternativeSlot) => {
+    setValue('date', slot.date)
+    setValue('start_time', slot.start_time)
+    setValue('end_time', slot.end_time)
+    setSelectedSpace(null)
+    setSearchParams({ ...(searchParams ?? {}), ...slot } as ReservationSearchValues)
+  }
 
   const onSubmit = (data: ReservationSearchValues) => {
     setSelectedSpace(null)
@@ -118,12 +130,38 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!isLoading && searchParams && availableSpaces?.length === 0 && (
-        <EmptyState
-          icon={SearchIcon}
-          title={t('search.noResults')}
-          description={t('search.noResultsHint')}
-        />
+      {noResults && (
+        <div className="space-y-4">
+          <EmptyState
+            icon={SearchIcon}
+            title={t('search.noResults')}
+            description={t('search.noResultsHint')}
+          />
+          {alternatives && alternatives.length > 0 && (
+            <div className="mx-auto max-w-md space-y-2">
+              <p className="text-center text-sm font-medium text-foreground">
+                {t('search.alternativesTitle')}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {alternatives.map((slot) => (
+                  <Button
+                    key={`${slot.date}-${slot.start_time}`}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => applyAlternative(slot)}
+                  >
+                    {new Date(`${slot.date}T${slot.start_time}`).toLocaleDateString(undefined, {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                    })}{' '}
+                    · {slot.start_time}–{slot.end_time}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {!isLoading && availableSpaces && availableSpaces.length > 0 && !selectedSpace && (

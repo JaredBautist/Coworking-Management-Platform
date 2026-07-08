@@ -31,7 +31,7 @@ export function Providers() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <InactivityProvider>
-              <RouterProvider router={router} />
+              <RouterProvider router={router} future={{ v7_startTransition: true }} />
               <ToastContainer />
             </InactivityProvider>
           </AuthProvider>

@@ -1,15 +1,23 @@
 import { useState, useMemo } from 'react'
-import { useTeamMembers, useUpdateMemberRole } from './hooks'
+import {
+  useTeamMembers,
+  useUpdateMemberRole,
+  useInvitations,
+  useCancelInvitation,
+} from './hooks'
+import { InviteMemberDialog } from './InviteMemberDialog'
 import { useAuthStore } from '@/stores/authStore'
 import { useRole } from '@/hooks/useRole'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useUIStore } from '@/stores/uiStore'
 import { useI18n } from '@/lib/i18n'
-import { Search, Users } from 'lucide-react'
+import { Search, Users, Mail, X } from 'lucide-react'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import {
   PageHeader,
+  Card,
+  CardContent,
   Input,
   Table,
   THead,
@@ -18,6 +26,7 @@ import {
   TH,
   TD,
   Badge,
+  Button,
   Select,
   EmptyState,
   DataTablePagination,
@@ -30,7 +39,9 @@ export default function TeamPage() {
   const currentProfile = useAuthStore((s) => s.profile)
   const { isOfficeManager } = useRole()
   const { data: members, isLoading } = useTeamMembers()
+  const { data: invitations } = useInvitations()
   const updateRole = useUpdateMemberRole()
+  const cancelInvitation = useCancelInvitation()
   const addToast = useUIStore((s) => s.addToast)
 
   const [search, setSearch] = useState('')
@@ -100,6 +111,15 @@ export default function TeamPage() {
     setSelfDemoteTarget(null)
   }
 
+  const handleCancelInvitation = async (id: string) => {
+    try {
+      await cancelInvitation.mutateAsync(id)
+      addToast({ type: 'success', message: t('team.inviteCancelled') })
+    } catch {
+      addToast({ type: 'error', message: t('team.roleUpdateError') })
+    }
+  }
+
   if (isLoading) return <SkeletonTable rows={5} />
 
   return (
@@ -108,21 +128,61 @@ export default function TeamPage() {
         title={t('nav.team')}
         subtitle={t('team.total', { count: String(members?.length ?? 0) })}
         actions={
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder={t('team.searchPlaceholder')}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setPage(1)
-              }}
-              className="w-full pl-9 sm:w-72"
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={t('team.searchPlaceholder')}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setPage(1)
+                }}
+                className="w-full pl-9 sm:w-64"
+              />
+            </div>
+            {isOfficeManager && <InviteMemberDialog />}
           </div>
         }
       />
+
+      {isOfficeManager && invitations && invitations.length > 0 && (
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <p className="mb-3 text-sm font-medium text-foreground">
+              {t('team.pendingInvitations')}
+            </p>
+            <ul className="space-y-2">
+              {invitations.map((inv) => (
+                <li
+                  key={inv.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="truncate text-sm text-foreground">{inv.email}</span>
+                    <Badge tone={inv.role === 'office_manager' ? 'accent' : 'neutral'}>
+                      {inv.role === 'office_manager'
+                        ? t('team.administrator')
+                        : t('team.member')}
+                    </Badge>
+                    <Badge tone="warning">{t('team.invitePending')}</Badge>
+                  </div>
+                  <Button
+                    variant="destructive-ghost"
+                    size="icon"
+                    onClick={() => handleCancelInvitation(inv.id)}
+                    aria-label={t('common.cancel')}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {paginated.length === 0 ? (
         <EmptyState
@@ -152,7 +212,7 @@ export default function TeamPage() {
                 </TD>
                 <TD className="text-muted-foreground">{member.email}</TD>
                 <TD>
-                  {isOfficeManager && member.id !== currentProfile?.id ? (
+                  {isOfficeManager ? (
                     <Select
                       value={member.role}
                       onChange={(e) =>
