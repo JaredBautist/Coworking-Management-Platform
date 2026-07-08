@@ -5,6 +5,7 @@ import { useUIStore } from '@/stores/uiStore'
 import { useI18n } from '@/lib/i18n'
 import { CalendarClock, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { AddToCalendar } from '@/components/shared/AddToCalendar'
 import {
   PageHeader,
   Card,
@@ -131,6 +132,20 @@ export default function ReservationsPage() {
                         ? t('reservations.confirmed')
                         : t('reservations.cancelled')}
                     </Badge>
+                    {isConfirmed && isFuture && (
+                      <div className="mt-3">
+                        <AddToCalendar
+                          event={{
+                            id: reservation.id,
+                            title: reservation.space?.name ?? t('reports.space'),
+                            start: reservation.start_time,
+                            end: reservation.end_time,
+                            details: reservation.summary,
+                            location: reservation.space?.name,
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                   {canCancel && (
                     <Button

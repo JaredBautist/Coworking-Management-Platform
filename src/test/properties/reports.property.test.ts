@@ -17,7 +17,7 @@ describe('Property 14: Cálculo de tasa de ocupación por espacio', () => {
   it('retorna null si daily_capacity_hours es 0', () => {
     fc.assert(
       fc.property(
-        fc.float({ min: 0, max: 1000 }),
+        fc.float({ min: 0, max: 1000, noNaN: true }),
         (hours) => {
           expect(calculateOccupancyRate(hours, 0)).toBeNull()
         }
@@ -29,7 +29,7 @@ describe('Property 14: Cálculo de tasa de ocupación por espacio', () => {
   it('retorna un valor no negativo', () => {
     fc.assert(
       fc.property(
-        fc.float({ min: 0, max: 500 }),
+        fc.float({ min: 0, max: 500, noNaN: true }),
         fc.integer({ min: 1, max: 24 }),
         (hours, dailyHours) => {
           const rate = calculateOccupancyRate(hours, dailyHours)

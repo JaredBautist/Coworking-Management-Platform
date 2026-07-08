@@ -8,6 +8,7 @@ import {
 import { useActiveSpaces } from '@/features/spaces/hooks'
 import { useTeamMembers } from '@/features/team/hooks'
 import { toUtcISOString } from '@/lib/utils'
+import { AddToCalendar } from '@/components/shared/AddToCalendar'
 import { useAuthStore } from '@/stores/authStore'
 import { useUIStore } from '@/stores/uiStore'
 import { useI18n } from '@/lib/i18n'
@@ -482,6 +483,18 @@ export default function CalendarPage() {
                   <div className="mt-1">
                     <Badge tone="success">{t('calendar.confirmed')}</Badge>
                   </div>
+                </div>
+                <div className="pt-1">
+                  <AddToCalendar
+                    event={{
+                      id: selectedEvent.id,
+                      title: selectedEvent.spaceName || selectedEvent.title,
+                      start: selectedEvent.start,
+                      end: selectedEvent.end,
+                      details: selectedEvent.summary,
+                      location: selectedEvent.spaceName,
+                    }}
+                  />
                 </div>
               </div>
             </CardContent>
