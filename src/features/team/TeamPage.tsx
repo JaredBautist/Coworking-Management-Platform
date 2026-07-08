@@ -91,7 +91,7 @@ export default function TeamPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{t('nav.team')}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{t('nav.team')}</h1>
           <p className="text-sm text-muted-foreground">
             {t('team.total', { count: String(members?.length ?? 0) })}
           </p>
@@ -104,11 +104,11 @@ export default function TeamPage() {
             setSearch(e.target.value)
             setPage(1)
           }}
-          className="max-w-xs rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+          className="input-field max-w-xs"
         />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-surface">
+      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted">
@@ -128,9 +128,9 @@ export default function TeamPage() {
             {paginated.map((member) => (
               <tr
                 key={member.id}
-                className="border-b border-border last:border-0"
+                className="border-b border-border last:border-0 transition-colors hover:bg-muted/50"
               >
-                <td className="px-4 py-3 text-sm font-medium">
+                <td className="px-4 py-3 text-sm font-medium text-foreground">
                   {member.full_name}
                   {member.id === currentProfile?.id && (
                     <span className="ml-2 text-xs text-muted-foreground">
@@ -151,7 +151,7 @@ export default function TeamPage() {
                           e.target.value as 'office_manager' | 'member'
                         )
                       }
-                      className="rounded-md border border-border bg-surface px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary"
+                      className="input-field px-2 py-1"
                     >
                       <option value="member">{t('team.member')}</option>
                       <option value="office_manager">{t('team.admin')}</option>
@@ -160,8 +160,8 @@ export default function TeamPage() {
                     <span
                       className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                         member.role === 'office_manager'
-                          ? 'bg-indigo-100 text-indigo-700'
-                          : 'bg-gray-100 text-gray-600'
+                          ? 'bg-accent/10 text-accent'
+                          : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       {member.role === 'office_manager'
@@ -195,14 +195,14 @@ export default function TeamPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="btn-ghost border border-border"
             >
               {t('common.previous')}
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="btn-ghost border border-border"
             >
               {t('common.next')}
             </button>

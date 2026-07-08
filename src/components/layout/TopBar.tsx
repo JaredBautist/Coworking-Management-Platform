@@ -39,7 +39,7 @@ export function TopBar() {
         <LanguageSwitcher />
         <button
           onClick={handleLogout}
-          className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors"
+          className="btn-ghost"
         >
           {t('common.logout')}
         </button>

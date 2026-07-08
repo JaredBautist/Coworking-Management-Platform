@@ -5,7 +5,269 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    @apply border-border;
+  }
+
   body {
     @apply bg-background text-muted-foreground font-sans antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  }
+
+  ::selection {
+    @apply bg-primary/15 text-primary;
+  }
+}
+
+@layer components {
+  .card-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .card-hover:hover {
+    @apply -translate-y-0.5 shadow-card;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all duration-150 ease-out hover:bg-primary/90 hover:shadow-sm active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-150 ease-out hover:bg-muted hover:text-foreground active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .input-field {
+    @apply block w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder-muted-foreground/60 transition-all duration-150 ease-out focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus-visible:outline-none disabled:opacity-50;
+  }
+
+  .page-enter {
+    @apply animate-fade-in-up;
+  }
+
+  .card {
+    @apply rounded-xl border border-border bg-surface shadow-soft transition-all duration-200 ease-out;
+  }
+
+  .card:hover {
+    @apply shadow-card;
+  }
+
+  .panel-enter {
+    @apply animate-slide-in-right;
+  }
+
+  /* ── FullCalendar overrides ── */
+  .fc {
+    @apply font-sans text-sm;
+  }
+
+  .fc .fc-toolbar {
+    @apply mb-4 flex-wrap gap-2;
+  }
+
+  .fc .fc-toolbar-title {
+    @apply text-base font-semibold text-foreground;
+  }
+
+  .fc .fc-button {
+    @apply inline-flex items-center justify-center rounded-lg border-0 px-3 py-1.5 text-sm font-medium transition-all duration-150;
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .fc .fc-button:hover {
+    @apply bg-muted/80 text-foreground;
+  }
+
+  .fc .fc-button:focus {
+    @apply shadow-none ring-2 ring-primary/30;
+  }
+
+  .fc .fc-button:active,
+  .fc .fc-button-primary:not(:disabled).fc-button-active {
+    @apply bg-primary text-primary-foreground shadow-sm;
+  }
+
+  .fc .fc-button-primary:not(:disabled).fc-button-active:hover {
+    @apply bg-primary/90;
+  }
+
+  .fc .fc-button .fc-icon {
+    @apply text-base leading-none;
+  }
+
+  .fc .fc-button-group .fc-button {
+    @apply rounded-none first:rounded-l-lg last:rounded-r-lg;
+  }
+
+  .fc .fc-button-group .fc-button:not(:last-child) {
+    @apply border-r border-border/50;
+  }
+
+  .fc .fc-scrollgrid {
+    @apply rounded-lg border border-border;
+  }
+
+  .fc .fc-scrollgrid-section > td {
+    @apply border-border;
+  }
+
+  .fc .fc-col-header-cell {
+    @apply bg-muted/50 border-border px-2 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    @apply no-underline;
+  }
+
+  .fc .fc-daygrid-day {
+    @apply border-border transition-colors;
+  }
+
+  .fc .fc-daygrid-day:hover {
+    @apply bg-muted/30;
+  }
+
+  .fc .fc-daygrid-day-top {
+    @apply px-1 py-1;
+  }
+
+  .fc .fc-daygrid-day-number {
+    @apply text-xs text-muted-foreground no-underline;
+  }
+
+  .fc .fc-day-today {
+    @apply bg-primary/[0.04] !important;
+  }
+
+  .fc .fc-day-today .fc-daygrid-day-number {
+    @apply font-semibold text-primary;
+  }
+
+  .fc .fc-day-today .fc-daygrid-day-frame {
+    @apply ring-1 ring-inset ring-primary/20 rounded;
+  }
+
+  .fc .fc-highlight {
+    @apply bg-primary/10 !important;
+  }
+
+  .fc .fc-daygrid-more-link {
+    @apply text-xs font-medium text-primary no-underline;
+  }
+
+  .fc .fc-daygrid-event {
+    @apply mx-1 mb-0.5 rounded-md border-0 px-1.5 py-0.5 text-xs font-medium;
+    @apply bg-primary/10 text-primary;
+  }
+
+  .fc .fc-daygrid-event:hover {
+    @apply bg-primary/20;
+  }
+
+  .fc .fc-daygrid-event .fc-event-title {
+    @apply font-medium;
+  }
+
+  .fc .fc-daygrid-event .fc-event-time {
+    @apply font-normal opacity-70;
+  }
+
+  .fc .fc-timegrid-event {
+    @apply rounded-md border-0 bg-primary/10 text-primary shadow-sm;
+  }
+
+  .fc .fc-timegrid-event:hover {
+    @apply bg-primary/20;
+  }
+
+  .fc .fc-timegrid-event .fc-event-main {
+    @apply p-1 text-xs font-medium;
+  }
+
+  .fc .fc-timegrid-slot {
+    @apply border-border h-8;
+  }
+
+  .fc .fc-timegrid-slot-lane:hover {
+    @apply bg-muted/30;
+  }
+
+  .fc .fc-timegrid-axis {
+    @apply border-border;
+  }
+
+  .fc .fc-timegrid-axis-cushion {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .fc .fc-timegrid-now-indicator-line {
+    @apply border-destructive;
+  }
+
+  .fc .fc-timegrid-now-indicator-arrow {
+    @apply border-destructive;
+  }
+
+  .fc .fc-popover {
+    @apply !rounded-xl border-border bg-surface shadow-elevated;
+  }
+
+  .fc .fc-popover-title {
+    @apply text-sm font-semibold text-foreground;
+  }
+
+  .fc .fc-popover-header {
+    @apply bg-muted/50 rounded-t-xl border-b border-border px-3 py-2;
+  }
+
+  .fc .fc-popover-body {
+    @apply p-2;
+  }
+
+  .fc .fc-more-popover .fc-daygrid-event {
+    @apply mx-0;
+  }
+
+  .fc .fc-non-business {
+    @apply bg-muted/20;
+  }
+
+  .fc .fc-day-disabled {
+    @apply bg-muted/30;
+  }
+
+  .fc .fc-list {
+    @apply border-border;
+  }
+
+  .fc .fc-list-day-cushion {
+    @apply bg-muted/30;
+  }
+
+  .fc .fc-list-table td {
+    @apply border-border;
+  }
+
+  .fc .fc-list-event:hover td {
+    @apply bg-muted/50;
+  }
+
+  .fc .fc-list-event-dot {
+    @apply border-primary;
+  }
+
+  .fc-direction-ltr .fc-timegrid-col-events {
+    @apply mx-0.5;
+  }
+
+  .fc .fc-timegrid-col-frame {
+    @apply min-h-[40px];
+  }
+
+  .fc .fc-more-popover {
+    @apply !shadow-elevated;
   }
 }

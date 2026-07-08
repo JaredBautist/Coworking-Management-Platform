@@ -46,25 +46,25 @@ export function ManagerDashboard() {
   return (
     <div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="card p-4" style={{ animationDelay: '0ms' }}>
           <p className="text-sm text-muted-foreground">{t('dashboard.activeSpaces')}</p>
-          <p className="mt-1 text-3xl font-semibold">{activeSpaces}</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">{activeSpaces}</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="card p-4" style={{ animationDelay: '80ms' }}>
           <p className="text-sm text-muted-foreground">{t('dashboard.todayReservations')}</p>
-          <p className="mt-1 text-3xl font-semibold">
+          <p className="mt-1 text-3xl font-semibold text-foreground">
             {todayReservations.length}
           </p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="card p-4" style={{ animationDelay: '160ms' }}>
           <p className="text-sm text-muted-foreground">{t('dashboard.occupancyToday')}</p>
-          <p className="mt-1 text-3xl font-semibold">{occupancyRate}%</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">{occupancyRate}%</p>
         </div>
       </div>
       <div className="mt-6">
         <Link
           to="/app/reports"
-          className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+          className="btn-ghost gap-2"
         >
           {t('dashboard.viewReports')}
         </Link>

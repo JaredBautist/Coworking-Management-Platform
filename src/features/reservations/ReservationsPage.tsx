@@ -44,25 +44,25 @@ export default function ReservationsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">{t('reservations.myReservations')}</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-foreground">{t('reservations.myReservations')}</h1>
 
       <div className="mb-4 flex gap-2">
         <button
           onClick={() => setTab('upcoming')}
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 ${
             tab === 'upcoming'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80 active:scale-[0.97]'
           }`}
         >
           {t('reservations.upcoming')} ({upcoming.length})
         </button>
         <button
           onClick={() => setTab('past')}
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 ${
             tab === 'past'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80 active:scale-[0.97]'
           }`}
         >
           {t('reservations.past')} ({past.length})
@@ -72,7 +72,7 @@ export default function ReservationsPage() {
       {isLoading && <SkeletonTable rows={5} />}
 
       {!isLoading && currentList.length === 0 && (
-        <div className="rounded-lg border border-border bg-surface p-8 text-center">
+        <div className="card p-8 text-center">
           <p className="text-muted-foreground">
             {tab === 'upcoming'
               ? t('reservations.noUpcoming')
@@ -90,11 +90,11 @@ export default function ReservationsPage() {
           return (
             <div
               key={reservation.id}
-              className="mb-3 rounded-lg border border-border bg-surface p-4"
+              className="card mb-3 p-4"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-medium">
+                  <h3 className="font-medium text-foreground">
                     {reservation.space?.name ?? t('reports.space')}
                   </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -120,8 +120,8 @@ export default function ReservationsPage() {
                   <span
                     className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                       reservation.status === 'confirmed'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {reservation.status === 'confirmed'
@@ -135,7 +135,7 @@ export default function ReservationsPage() {
                       handleCancel(reservation.id, reservation.start_time)
                     }
                     disabled={cancelReservation.isPending}
-                    className="rounded-md px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                    className="btn-ghost text-destructive hover:bg-destructive/10"
                   >
                     {t('reservations.cancel')}
                   </button>

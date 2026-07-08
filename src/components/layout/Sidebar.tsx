@@ -37,20 +37,21 @@ export function Sidebar() {
   return (
     <aside className="flex w-64 flex-col border-r border-border bg-surface">
       <nav className="flex-1 space-y-1 p-4">
-        {visibleItems.map((item) => (
+        {visibleItems.map((item, i) => (
           <NavLink
             key={item.to}
             to={item.to}
+            style={{ animationDelay: `${i * 40}ms` }}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
                 isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground active:scale-[0.98]'
               )
             }
           >
-            <item.icon className="h-4 w-4" />
+            <item.icon className="h-4 w-4 shrink-0" />
             {t(item.labelKey)}
           </NavLink>
         ))}

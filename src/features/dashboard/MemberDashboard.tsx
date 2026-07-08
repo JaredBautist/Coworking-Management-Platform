@@ -25,7 +25,7 @@ export function MemberDashboard() {
 
   return (
     <div>
-      <div className="mb-8 rounded-lg border border-border bg-surface p-4">
+      <div className="card mb-8 p-4">
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">
           {t('dashboard.quickSearch')}
         </h2>
@@ -34,11 +34,11 @@ export function MemberDashboard() {
             type="date"
             value={quickDate}
             onChange={(e) => setQuickDate(e.target.value)}
-            className="block rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+            className="input-field"
           />
           <button
             type="submit"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+            className="btn-primary"
           >
             {t('common.search')}
           </button>
@@ -46,10 +46,10 @@ export function MemberDashboard() {
       </div>
 
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{t('dashboard.upcomingReservations')}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('dashboard.upcomingReservations')}</h2>
         <Link
           to="/app/calendar"
-          className="text-sm text-primary hover:underline"
+          className="btn-ghost"
         >
           {t('dashboard.viewCalendar')}
         </Link>
@@ -64,11 +64,11 @@ export function MemberDashboard() {
       )}
 
       {!isLoading && upcoming.length === 0 && (
-        <div className="rounded-lg border border-border bg-surface p-8 text-center">
+        <div className="card p-8 text-center">
           <p className="text-muted-foreground">{t('dashboard.noUpcomingReservations')}</p>
           <Link
             to="/app/reservations/search"
-            className="mt-2 inline-block text-sm text-primary hover:underline"
+            className="btn-ghost mt-2"
           >
             {t('dashboard.searchAvailableSpaces')}
           </Link>
@@ -79,11 +79,11 @@ export function MemberDashboard() {
         upcoming.map((r) => (
           <div
             key={r.id}
-            className="mb-3 rounded-lg border border-border bg-surface p-4"
+            className="card mb-3 p-4"
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-medium">
+                <h3 className="font-medium text-foreground">
                   {r.space?.name ?? 'Espacio'}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">

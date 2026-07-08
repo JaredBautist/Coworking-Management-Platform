@@ -136,9 +136,9 @@ export default function CalendarPage() {
     <div className="flex h-full gap-4">
       <div className="flex-1">
         <div className="mb-4">
-          <h1 className="text-2xl font-semibold">{t('calendar.title')}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{t('calendar.title')}</h1>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="card p-4">
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -168,12 +168,12 @@ export default function CalendarPage() {
 
       {/* Create reservation panel */}
       {selectedSlot && (
-        <div className="w-80 shrink-0 rounded-lg border border-border bg-surface p-4">
+        <div className="panel-enter w-80 shrink-0 card p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold">{t('calendar.newReservation')}</h2>
+            <h2 className="font-semibold text-foreground">{t('calendar.newReservation')}</h2>
             <button
               onClick={() => setSelectedSlot(null)}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="btn-ghost"
             >
               {t('common.close')}
             </button>
@@ -182,7 +182,7 @@ export default function CalendarPage() {
           <div className="space-y-3 text-sm">
             <div>
               <span className="text-muted-foreground">Fecha:</span>
-              <p className="font-medium">
+              <p className="font-medium text-foreground">
                 {new Date(selectedSlot.date).toLocaleDateString(
                   t('calendar.mon') === 'Mon' ? 'en-US' : 'es-ES',
                   { day: 'numeric', month: 'long', year: 'numeric' }
@@ -191,23 +191,23 @@ export default function CalendarPage() {
             </div>
             <div>
               <span className="text-muted-foreground">Horario:</span>
-              <p className="font-medium">
+              <p className="font-medium text-foreground">
                 {selectedSlot.startStr.split('T')[1]?.slice(0, 5) || '--'} -{' '}
                 {selectedSlot.endStr.split('T')[1]?.slice(0, 5) || '--'}
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-muted-foreground">
+              <label className="block text-sm font-medium text-foreground">
                 {t('calendar.organizer')}
               </label>
-              <p className="mt-1 text-sm">{profile?.full_name || profile?.email}</p>
+              <p className="mt-1 text-sm text-foreground">{profile?.full_name || profile?.email}</p>
             </div>
 
             <div>
               <label
                 htmlFor="calendar-space"
-                className="block text-sm font-medium text-muted-foreground"
+                className="block text-sm font-medium text-foreground"
               >
                 {t('calendar.selectSpace')}
               </label>
@@ -215,7 +215,7 @@ export default function CalendarPage() {
                 id="calendar-space"
                 value={formSpace}
                 onChange={(e) => setFormSpace(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                className="input-field mt-1"
               >
                 <option value="">-- {t('calendar.selectSpace')} --</option>
                 {availableSpaces.map((s) => (
@@ -234,7 +234,7 @@ export default function CalendarPage() {
             <div>
               <label
                 htmlFor="calendar-summary"
-                className="block text-sm font-medium text-muted-foreground"
+                className="block text-sm font-medium text-foreground"
               >
                 {t('calendar.summary')}
               </label>
@@ -244,14 +244,14 @@ export default function CalendarPage() {
                 value={formSummary}
                 onChange={(e) => setFormSummary(e.target.value)}
                 placeholder={t('calendar.summaryPlaceholder')}
-                className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                className="input-field mt-1"
               />
             </div>
 
             <button
               onClick={handleCreateReservation}
               disabled={!formSpace || isSubmitting}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="btn-primary w-full"
             >
               {isSubmitting ? t('calendar.saving') : t('calendar.save')}
             </button>
@@ -261,12 +261,12 @@ export default function CalendarPage() {
 
       {/* Event detail panel */}
       {selectedEvent && !selectedSlot && (
-        <div className="w-80 shrink-0 rounded-lg border border-border bg-surface p-4">
+        <div className="panel-enter w-80 shrink-0 card p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold">{t('calendar.details')}</h2>
+            <h2 className="font-semibold text-foreground">{t('calendar.details')}</h2>
             <button
               onClick={() => setSelectedEvent(null)}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="btn-ghost"
             >
               {t('common.close')}
             </button>
@@ -275,11 +275,11 @@ export default function CalendarPage() {
           <div className="space-y-3 text-sm">
             <div>
               <span className="text-muted-foreground">{t('calendar.space')}</span>
-              <p className="font-medium">{selectedEvent.spaceName || selectedEvent.title}</p>
+              <p className="font-medium text-foreground">{selectedEvent.spaceName || selectedEvent.title}</p>
             </div>
             <div>
               <span className="text-muted-foreground">{t('calendar.schedule')}</span>
-              <p className="font-medium">
+              <p className="font-medium text-foreground">
                 {new Date(selectedEvent.start).toLocaleTimeString(
                   t('calendar.mon') === 'Mon' ? 'en-US' : 'es-ES',
                   { hour: '2-digit', minute: '2-digit' }
@@ -294,18 +294,18 @@ export default function CalendarPage() {
             {selectedEvent.summary && (
               <div>
                 <span className="text-muted-foreground">{t('calendar.summary')}</span>
-                <p>{selectedEvent.summary}</p>
+                <p className="text-foreground">{selectedEvent.summary}</p>
               </div>
             )}
             {selectedEvent.userName && (
               <div>
                 <span className="text-muted-foreground">{t('calendar.reservedBy')}</span>
-                <p>{selectedEvent.userName}</p>
+                <p className="text-foreground">{selectedEvent.userName}</p>
               </div>
             )}
             <div>
               <span className="text-muted-foreground">{t('calendar.status')}</span>
-              <p>{t('calendar.confirmed')}</p>
+              <p className="text-foreground">{t('calendar.confirmed')}</p>
             </div>
           </div>
         </div>

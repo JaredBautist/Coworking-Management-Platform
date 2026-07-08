@@ -79,17 +79,17 @@ export default function SpacesPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{t('nav.spaces')}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{t('nav.spaces')}</h1>
         <Link
           to="/app/spaces/new"
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+          className="btn-primary gap-2"
         >
           <Plus className="h-4 w-4" />
           {t('spaces.new')}
         </Link>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-surface">
+      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted">
@@ -109,9 +109,9 @@ export default function SpacesPage() {
             </tr>
           </thead>
           <tbody>
-            {paginatedSpaces.map((space) => (
-              <tr key={space.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3 text-sm font-medium">{space.name}</td>
+            {paginatedSpaces.map((space, i) => (
+              <tr key={space.id} className="border-b border-border last:border-0 transition-colors hover:bg-muted/50" style={{ animationDelay: `${i * 30}ms` }}>
+                <td className="px-4 py-3 text-sm font-medium text-foreground">{space.name}</td>
                 <td className="px-4 py-3 text-sm text-muted-foreground">
                   {t(`spaceType.${space.type}`)}
                 </td>
@@ -122,8 +122,8 @@ export default function SpacesPage() {
                   <span
                     className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                       space.is_active
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-destructive/10 text-destructive'
                     }`}
                   >
                     {space.is_active ? t('common.active') : t('common.inactive')}
@@ -133,7 +133,7 @@ export default function SpacesPage() {
                   <div className="flex justify-end gap-2">
                     <Link
                       to={`/app/spaces/${space.id}/edit`}
-                      className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors"
+                      className="btn-ghost"
                     >
                       {t('common.edit')}
                     </Link>
@@ -142,7 +142,7 @@ export default function SpacesPage() {
                         onClick={() =>
                           checkFutureReservations(space.id, space.name)
                         }
-                        className="rounded-md px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                        className="btn-ghost text-destructive hover:bg-destructive/10"
                       >
                         {t('common.deactivate')}
                       </button>
@@ -174,14 +174,14 @@ export default function SpacesPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="btn-ghost border border-border"
             >
               {t('common.previous')}
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="btn-ghost border border-border"
             >
               {t('common.next')}
             </button>

@@ -39,7 +39,7 @@ export default function ReportsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{t('nav.reports')}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{t('nav.reports')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {thirtyDaysAgo.toLocaleDateString('en-US')} -{' '}
             {new Date().toLocaleDateString('en-US')}
@@ -49,7 +49,7 @@ export default function ReportsPage() {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+            className="input-field w-auto"
           >
             <option value="">{t('reports.allTypes')}</option>
             <option value="desk">{t('spaceType.desk')}</option>
@@ -60,7 +60,7 @@ export default function ReportsPage() {
           <button
             onClick={handleExport}
             disabled={filteredUtilization.length === 0}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="btn-primary"
           >
             {t('reports.exportCSV')}
           </button>
@@ -76,7 +76,7 @@ export default function ReportsPage() {
       )}
 
       {!isLoading && filteredUtilization.length === 0 && (
-        <div className="rounded-lg border border-border bg-surface p-8 text-center">
+        <div className="card p-8 text-center">
           <p className="text-muted-foreground">
             {t('reports.empty')}
           </p>
@@ -85,7 +85,7 @@ export default function ReportsPage() {
 
       {!isLoading && filteredUtilization.length > 0 && (
         <div className="space-y-6">
-          <div className="overflow-hidden rounded-lg border border-border bg-surface">
+          <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted">
@@ -115,9 +115,9 @@ export default function ReportsPage() {
                   return (
                     <tr
                       key={row.space_id}
-                      className="border-b border-border last:border-0"
+                      className="border-b border-border last:border-0 transition-colors hover:bg-muted/50"
                     >
-                      <td className="px-4 py-3 text-sm font-medium">
+                      <td className="px-4 py-3 text-sm font-medium text-foreground">
                         {row.name}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -125,13 +125,13 @@ export default function ReportsPage() {
                           ? t(`spaceType.${row.space_type}`)
                           : '-'}
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {row.total_reservations}
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {row.total_hours_booked.toFixed(1)}
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {rate !== null ? `${rate}%` : t('reports.na')}
                       </td>
                     </tr>
@@ -141,7 +141,7 @@ export default function ReportsPage() {
             </table>
           </div>
 
-          <div className="rounded-lg border border-border bg-surface p-4">
+          <div className="card p-4">
             <h3 className="mb-4 text-sm font-medium text-muted-foreground">
               {t('reports.occupancyChart')}
             </h3>
@@ -161,7 +161,7 @@ export default function ReportsPage() {
                       {rate !== null ? `${rate}%` : t('reports.na')}
                     </span>
                     <div
-                      className="w-full rounded-t bg-primary transition-all"
+                      className="w-full rounded-t bg-primary transition-all duration-500"
                       style={{ height }}
                     >
                       <div className="h-full min-h-[4px] rounded-t" />
@@ -176,7 +176,7 @@ export default function ReportsPage() {
           </div>
 
           {dailyData && dailyData.length > 0 && (
-            <div className="rounded-lg border border-border bg-surface p-4">
+            <div className="card p-4">
               <h3 className="mb-4 text-sm font-medium text-muted-foreground">
                 {t('reports.dailyChart')}
               </h3>
@@ -196,7 +196,7 @@ export default function ReportsPage() {
                         {d.count}
                       </span>
                       <div
-                        className="w-full rounded-t bg-secondary transition-all"
+                        className="w-full rounded-t bg-secondary transition-all duration-500"
                         style={{ height }}
                       >
                         <div className="h-full min-h-[4px] rounded-t" />

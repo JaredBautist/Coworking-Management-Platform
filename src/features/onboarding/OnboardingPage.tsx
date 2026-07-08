@@ -116,8 +116,8 @@ export default function OnboardingPage() {
   if (!profile) return null
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,#FAFBFC_0%,#EEF2FF_100%)] p-4">
+      <div className="animate-fade-in-up w-full max-w-md rounded-xl border border-border bg-surface p-8 shadow-elevated">
         <div className="mb-6">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>{t('onboarding.step', { current: String(step), total: '2' })}</span>
@@ -125,15 +125,15 @@ export default function OnboardingPage() {
           </div>
           <div className="mt-2 h-2 w-full rounded-full bg-muted">
             <div
-              className="h-2 rounded-full bg-primary transition-all"
+              className="h-2 rounded-full bg-primary transition-all duration-500"
               style={{ width: step === 0 ? '50%' : '100%' }}
             />
           </div>
         </div>
 
         {step === 0 && (
-          <div>
-            <h1 className="mb-2 text-2xl font-semibold text-primary">
+          <div className="animate-fade-in">
+            <h1 className="mb-2 text-2xl font-semibold text-foreground">
               {t('onboarding.orgNameTitle')}
             </h1>
             <p className="mb-6 text-sm text-muted-foreground">
@@ -147,7 +147,7 @@ export default function OnboardingPage() {
               <div>
                 <label
                   htmlFor="org-name"
-                  className="block text-sm font-medium text-muted-foreground"
+                  className="block text-sm font-medium text-foreground"
                 >
                   {t('auth.organizationName')}
                 </label>
@@ -155,10 +155,10 @@ export default function OnboardingPage() {
                   id="org-name"
                   {...orgForm.register('name')}
                   placeholder={t('onboarding.orgNamePlaceholder')}
-                  className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="input-field mt-1.5"
                 />
                 {orgForm.formState.errors.name && (
-                  <p className="mt-1 text-xs text-destructive">
+                  <p className="mt-1.5 text-xs text-destructive">
                     {orgForm.formState.errors.name.message}
                   </p>
                 )}
@@ -167,7 +167,7 @@ export default function OnboardingPage() {
               {serverError && (
                 <div
                   role="alert"
-                  className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  className="animate-fade-in rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 >
                   {serverError}
                 </div>
@@ -176,7 +176,7 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={orgForm.formState.isSubmitting}
-                className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="btn-primary w-full"
               >
                 {orgForm.formState.isSubmitting
                   ? t('onboarding.submitting')
@@ -187,8 +187,8 @@ export default function OnboardingPage() {
         )}
 
         {step === 1 && (
-          <div>
-            <h1 className="mb-2 text-2xl font-semibold text-primary">
+          <div className="animate-fade-in">
+            <h1 className="mb-2 text-2xl font-semibold text-foreground">
               {t('onboarding.spaceTitle')}
             </h1>
             <p className="mb-6 text-sm text-muted-foreground">
@@ -202,17 +202,17 @@ export default function OnboardingPage() {
               <div>
                 <label
                   htmlFor="space-name"
-                  className="block text-sm font-medium text-muted-foreground"
+                  className="block text-sm font-medium text-foreground"
                 >
                   {t('onboarding.spaceNameLabel')}
                 </label>
                 <input
                   id="space-name"
                   {...spaceForm.register('name')}
-                  className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="input-field mt-1.5"
                 />
                 {spaceForm.formState.errors.name && (
-                  <p className="mt-1 text-xs text-destructive">
+                  <p className="mt-1.5 text-xs text-destructive">
                     {spaceForm.formState.errors.name.message}
                   </p>
                 )}
@@ -221,14 +221,14 @@ export default function OnboardingPage() {
               <div>
                 <label
                   htmlFor="space-type"
-                  className="block text-sm font-medium text-muted-foreground"
+                  className="block text-sm font-medium text-foreground"
                 >
                   {t('onboarding.spaceTypeLabel')}
                 </label>
                 <select
                   id="space-type"
                   {...spaceForm.register('type')}
-                  className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="input-field mt-1.5"
                 >
                   <option value="">{t('onboarding.spaceTypePlaceholder')}</option>
                   <option value="desk">{t('spaceType.desk')}</option>
@@ -237,7 +237,7 @@ export default function OnboardingPage() {
                   <option value="event_space">{t('spaceType.event_space')}</option>
                 </select>
                 {spaceForm.formState.errors.type && (
-                  <p className="mt-1 text-xs text-destructive">
+                  <p className="mt-1.5 text-xs text-destructive">
                     {spaceForm.formState.errors.type.message}
                   </p>
                 )}
@@ -246,7 +246,7 @@ export default function OnboardingPage() {
               {serverError && (
                 <div
                   role="alert"
-                  className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  className="animate-fade-in rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 >
                   {serverError}
                 </div>
@@ -255,7 +255,7 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={spaceForm.formState.isSubmitting}
-                className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="btn-primary w-full"
               >
                 {spaceForm.formState.isSubmitting
                   ? t('onboarding.submitting')

@@ -64,21 +64,21 @@ export default function SearchPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">{t('search.title')}</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-foreground">{t('search.title')}</h1>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="mb-8 rounded-lg border border-border bg-surface p-4"
+        className="card mb-8 p-4"
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <div>
-            <label className="block text-sm font-medium text-muted-foreground">
+            <label className="block text-sm font-medium text-foreground">
               {t('search.date')}
             </label>
             <input
               type="date"
               {...register('date')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+              className="input-field mt-1"
             />
             {errors.date && (
               <p className="mt-1 text-xs text-destructive">
@@ -87,13 +87,13 @@ export default function SearchPage() {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted-foreground">
+            <label className="block text-sm font-medium text-foreground">
               {t('search.startTime')}
             </label>
             <input
               type="time"
               {...register('start_time')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+              className="input-field mt-1"
             />
             {errors.start_time && (
               <p className="mt-1 text-xs text-destructive">
@@ -102,13 +102,13 @@ export default function SearchPage() {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted-foreground">
+            <label className="block text-sm font-medium text-foreground">
               {t('search.endTime')}
             </label>
             <input
               type="time"
               {...register('end_time')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+              className="input-field mt-1"
             />
             {errors.end_time && (
               <p className="mt-1 text-xs text-destructive">
@@ -117,12 +117,12 @@ export default function SearchPage() {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted-foreground">
+            <label className="block text-sm font-medium text-foreground">
               {t('search.spaceType')}
             </label>
             <select
               {...register('space_type')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+              className="input-field mt-1"
             >
               <option value="">{t('search.allTypes')}</option>
               <option value="desk">{t('spaceType.desk')}</option>
@@ -136,7 +136,7 @@ export default function SearchPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="btn-primary"
           >
             {t('search.submit')}
           </button>
@@ -152,7 +152,7 @@ export default function SearchPage() {
       )}
 
       {!isLoading && searchParams && availableSpaces?.length === 0 && (
-        <div className="rounded-lg border border-border bg-surface p-8 text-center">
+        <div className="card p-8 text-center">
           <p className="text-muted-foreground">
             {t('search.noResults')}
           </p>
@@ -167,9 +167,9 @@ export default function SearchPage() {
           {availableSpaces.map((space) => (
             <div
               key={space.id}
-              className="rounded-lg border border-border bg-surface p-4"
+              className="card p-4"
             >
-              <h3 className="font-medium">{space.name}</h3>
+              <h3 className="font-medium text-foreground">{space.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t(`spaceType.${space.type}` as const) ?? space.type}
               </p>
@@ -178,7 +178,7 @@ export default function SearchPage() {
               </p>
               <button
                 onClick={() => setSelectedSpace(space)}
-                className="mt-3 w-full rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+                className="btn-primary mt-3 w-full"
               >
                 {t('search.book')}
               </button>
@@ -188,30 +188,30 @@ export default function SearchPage() {
       )}
 
       {selectedSpace && searchParams && (
-        <div className="mx-auto max-w-md rounded-lg border border-border bg-surface p-6">
-          <h2 className="mb-4 text-lg font-semibold">{t('search.confirmTitle')}</h2>
+        <div className="mx-auto max-w-md card p-6">
+          <h2 className="mb-4 text-lg font-semibold text-foreground">{t('search.confirmTitle')}</h2>
           <div className="space-y-2 text-sm">
-            <p>
+            <p className="text-foreground">
               <span className="text-muted-foreground">{t('calendar.space')}:</span>{' '}
               {selectedSpace.name}
             </p>
-            <p>
+            <p className="text-foreground">
               <span className="text-muted-foreground">{t('calendar.type')}:</span>{' '}
               {t(`spaceType.${selectedSpace.type}` as const) ?? selectedSpace.type}
             </p>
-            <p>
+            <p className="text-foreground">
               <span className="text-muted-foreground">{t('search.date')}:</span>{' '}
               {searchParams.date}
             </p>
-            <p>
+            <p className="text-foreground">
               <span className="text-muted-foreground">{t('search.startTime')}:</span>{' '}
               {searchParams.start_time}
             </p>
-            <p>
+            <p className="text-foreground">
               <span className="text-muted-foreground">{t('search.endTime')}:</span>{' '}
               {searchParams.end_time}
             </p>
-            <p>
+            <p className="text-foreground">
               <span className="text-muted-foreground">{t('common.capacity')}:</span>{' '}
               {selectedSpace.capacity} {t('common.persons')}
             </p>
@@ -220,14 +220,14 @@ export default function SearchPage() {
             <button
               onClick={() => setSelectedSpace(null)}
               disabled={isCreating}
-              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="btn-ghost"
             >
               {t('common.back')}
             </button>
             <button
               onClick={handleConfirm}
               disabled={isCreating}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="btn-primary"
             >
               {isCreating ? t('search.confirming') : t('search.confirmSubmit')}
             </button>

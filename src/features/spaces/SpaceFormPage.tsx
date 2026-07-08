@@ -64,28 +64,28 @@ export default function SpaceFormPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-2xl font-semibold">
+      <h1 className="mb-6 text-2xl font-semibold text-foreground">
         {isEditing ? t('spaces.edit') : t('spaces.new')}
       </h1>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4 rounded-lg border border-border bg-surface p-6"
+        className="card space-y-4 p-6"
       >
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-muted-foreground"
+            className="block text-sm font-medium text-foreground"
           >
             {t('spaces.nameLabel')}
           </label>
           <input
             id="name"
             {...register('name')}
-            className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+            className="input-field mt-1.5"
           />
           {errors.name && (
-            <p className="mt-1 text-xs text-destructive">
+            <p className="mt-1.5 text-xs text-destructive">
               {errors.name.message}
             </p>
           )}
@@ -94,14 +94,14 @@ export default function SpaceFormPage() {
         <div>
           <label
             htmlFor="type"
-            className="block text-sm font-medium text-muted-foreground"
+            className="block text-sm font-medium text-foreground"
           >
             {t('spaces.typeLabel')}
           </label>
           <select
             id="type"
             {...register('type')}
-            className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+            className="input-field mt-1.5"
           >
             <option value="">{t('spaces.selectType')}</option>
             <option value="desk">{t('spaceType.desk')}</option>
@@ -110,7 +110,7 @@ export default function SpaceFormPage() {
             <option value="event_space">{t('spaceType.eventSpace')}</option>
           </select>
           {errors.type && (
-            <p className="mt-1 text-xs text-destructive">
+            <p className="mt-1.5 text-xs text-destructive">
               {errors.type.message}
             </p>
           )}
@@ -119,7 +119,7 @@ export default function SpaceFormPage() {
         <div>
           <label
             htmlFor="capacity"
-            className="block text-sm font-medium text-muted-foreground"
+            className="block text-sm font-medium text-foreground"
           >
             {t('spaces.capacityLabel')}
           </label>
@@ -129,10 +129,10 @@ export default function SpaceFormPage() {
             min={1}
             max={500}
             {...register('capacity')}
-            className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+            className="input-field mt-1.5"
           />
           {errors.capacity && (
-            <p className="mt-1 text-xs text-destructive">
+            <p className="mt-1.5 text-xs text-destructive">
               {errors.capacity.message}
             </p>
           )}
@@ -147,24 +147,24 @@ export default function SpaceFormPage() {
           />
           <label
             htmlFor="is_active"
-            className="text-sm font-medium text-muted-foreground"
+            className="text-sm font-medium text-foreground"
           >
             {t('spaces.activeLabel')}
           </label>
         </div>
 
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
             onClick={() => navigate('/app/spaces')}
-            className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+            className="btn-ghost"
           >
             {t('common.cancel')}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="btn-primary"
           >
             {isSubmitting
               ? 'Guardando...'

@@ -108,20 +108,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,#FAFBFC_0%,#EEF2FF_100%)] p-4">
+      <div className="animate-fade-in-up w-full max-w-sm rounded-xl border border-border bg-surface p-8 shadow-elevated">
         <div className="mb-6 flex justify-end">
           <LanguageSwitcher />
         </div>
-        <h1 className="mb-6 text-2xl font-semibold text-primary">
+        <h1 className="mb-1 text-2xl font-semibold text-foreground">
           {t('auth.login.title')}
         </h1>
+        <p className="mb-6 text-sm text-muted-foreground">
+          {t('app.name')}
+        </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-muted-foreground"
+              className="block text-sm font-medium text-foreground"
             >
               {t('auth.email')}
             </label>
@@ -131,10 +134,10 @@ export default function LoginPage() {
               autoComplete="email"
               disabled={isLocked}
               {...register('email')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+              className="input-field mt-1.5"
             />
             {errors.email && (
-              <p className="mt-1 text-xs text-destructive">
+              <p className="mt-1.5 text-xs text-destructive">
                 {errors.email.message}
               </p>
             )}
@@ -143,7 +146,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-muted-foreground"
+              className="block text-sm font-medium text-foreground"
             >
               {t('auth.password')}
             </label>
@@ -153,10 +156,10 @@ export default function LoginPage() {
               autoComplete="current-password"
               disabled={isLocked}
               {...register('password')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+              className="input-field mt-1.5"
             />
             {errors.password && (
-              <p className="mt-1 text-xs text-destructive">
+              <p className="mt-1.5 text-xs text-destructive">
                 {errors.password.message}
               </p>
             )}
@@ -165,7 +168,7 @@ export default function LoginPage() {
           {serverError && (
             <div
               role="alert"
-              className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              className="animate-fade-in rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
             >
               {isLocked && countdown > 0
                 ? t('auth.login.locked', { time: formatCountdown(countdown) })
@@ -176,7 +179,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting || isLocked}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="btn-primary w-full"
           >
             {isSubmitting ? t('auth.login.submitting') : t('auth.login.submit')}
           </button>
