@@ -267,9 +267,11 @@ CREATE POLICY "Manager actualiza su organización"
   USING (id = public.user_org_id() AND public.user_role() = 'office_manager');
 
 -- ---- PROFILES ----
-CREATE POLICY "Ver perfiles de mi organización"
+-- Coworking compartido: cualquier usuario autenticado ve los perfiles
+-- (necesario para mostrar el nombre de quién reservó, aunque sea de otra empresa).
+CREATE POLICY "Ver perfiles del coworking"
   ON profiles FOR SELECT
-  USING (org_id = public.user_org_id());
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Usuario actualiza su propio perfil"
   ON profiles FOR UPDATE
@@ -280,9 +282,10 @@ CREATE POLICY "Manager actualiza perfiles de su org"
   USING (org_id = public.user_org_id() AND public.user_role() = 'office_manager');
 
 -- ---- SPACES ----
-CREATE POLICY "Ver espacios de mi organización"
+-- Coworking compartido: todos ven todos los espacios (para reservar/coordinar).
+CREATE POLICY "Ver espacios del coworking"
   ON spaces FOR SELECT
-  USING (org_id = public.user_org_id());
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Manager crea espacios"
   ON spaces FOR INSERT
@@ -297,9 +300,10 @@ CREATE POLICY "Manager elimina espacios"
   USING (org_id = public.user_org_id() AND public.user_role() = 'office_manager');
 
 -- ---- RESERVATIONS ----
-CREATE POLICY "Ver reservas de mi organización"
+-- Coworking compartido: todos ven todas las reservas (para no chocar horarios).
+CREATE POLICY "Ver reservas del coworking"
   ON reservations FOR SELECT
-  USING (org_id = public.user_org_id());
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Usuario crea sus propias reservas"
   ON reservations FOR INSERT

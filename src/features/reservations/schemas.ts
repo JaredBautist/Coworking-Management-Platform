@@ -28,6 +28,34 @@ export const ReservationSearchSchema = z
 
 export type ReservationSearchValues = z.infer<typeof ReservationSearchSchema>
 
+// Búsqueda en Find Spaces: solo la fecha es obligatoria; hora y tipo son
+// filtros opcionales (cadena vacía = sin filtro). Con solo la fecha se listan
+// todas las reservas del día.
+export const SearchFilterSchema = z
+  .object({
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha inválido')
+      .or(z.literal('')),
+    start_time: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, 'Formato de hora inválido')
+      .or(z.literal('')),
+    end_time: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, 'Formato de hora inválido')
+      .or(z.literal('')),
+    space_type: z
+      .enum(['desk', 'meeting_room', 'phone_booth', 'event_space'])
+      .or(z.literal('')),
+  })
+  .refine((d) => !d.start_time || !d.end_time || d.end_time > d.start_time, {
+    message: 'La hora de fin debe ser posterior a la de inicio',
+    path: ['end_time'],
+  })
+
+export type SearchFilterValues = z.infer<typeof SearchFilterSchema>
+
 export function filterAvailableSpaces(
   allSpaces: Space[],
   occupiedSpaceIds: string[],

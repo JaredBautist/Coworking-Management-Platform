@@ -48,7 +48,29 @@ export function useCreateSpace() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['spaces'] })
+      queryClient.invalidateQueries({ queryKey: ['active-spaces'] })
     },
+  })
+}
+
+export function useActiveSpaces() {
+  const profile = useAuthStore((s) => s.profile)
+
+  return useQuery({
+    queryKey: ['active-spaces'],
+    queryFn: async () => {
+      // Coworking compartido: todos los espacios activos, de cualquier empresa.
+      const { data, error } = await supabase
+        .from('spaces')
+        .select('*')
+        .eq('is_active', true)
+        .order('name')
+
+      if (error) throw error
+      return data as Space[]
+    },
+    enabled: !!profile?.id,
+    staleTime: 30_000,
   })
 }
 
@@ -62,7 +84,10 @@ export function useDeleteSpace() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['spaces'] })
+      queryClient.invalidateQueries({ queryKey: ['active-spaces'] })
       queryClient.invalidateQueries({ queryKey: ['org-reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['all-reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['day-reservations'] })
     },
   })
 }
@@ -95,6 +120,7 @@ export function useUpdateSpace() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['spaces'] })
+      queryClient.invalidateQueries({ queryKey: ['active-spaces'] })
     },
   })
 }

@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react'
 import {
-  useOrgReservations,
+  useAllReservations,
   useCreateReservation,
   useReservationAttendees,
+  useDayReservations,
 } from '@/features/reservations/hooks'
-import { useSpaces } from '@/features/spaces/hooks'
+import { useActiveSpaces } from '@/features/spaces/hooks'
 import { useTeamMembers } from '@/features/team/hooks'
+import { toUtcISOString } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
-import { useRole } from '@/hooks/useRole'
 import { useUIStore } from '@/stores/uiStore'
 import { useI18n } from '@/lib/i18n'
 import { useQueryClient } from '@tanstack/react-query'
@@ -32,9 +33,8 @@ import {
 export default function CalendarPage() {
   const { t } = useI18n()
   const profile = useAuthStore((s) => s.profile)
-  const { isOfficeManager } = useRole()
-  const { data: reservations, isLoading } = useOrgReservations()
-  const { data: spaces } = useSpaces()
+  const { data: reservations, isLoading } = useAllReservations()
+  const { data: spaces } = useActiveSpaces()
   const { data: orgMembers } = useTeamMembers()
   const createReservation = useCreateReservation()
   const addToast = useUIStore((s) => s.addToast)
@@ -60,6 +60,8 @@ export default function CalendarPage() {
 
   const [formSpace, setFormSpace] = useState('')
   const [formSummary, setFormSummary] = useState('')
+  const [formStart, setFormStart] = useState('09:00')
+  const [formEnd, setFormEnd] = useState('10:00')
   const [formAttendees, setFormAttendees] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -90,11 +92,17 @@ export default function CalendarPage() {
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
     const dateStr = selectInfo.startStr.split('T')[0]
+    // In week/day view the selection carries a time; in month view it does not.
+    // Seed the editable time fields from the slot when available, else default.
+    const startTime = selectInfo.startStr.split('T')[1]?.slice(0, 5)
+    const endTime = selectInfo.endStr.split('T')[1]?.slice(0, 5)
     setSelectedSlot({
       date: dateStr,
       startStr: selectInfo.startStr,
       endStr: selectInfo.endStr,
     })
+    setFormStart(startTime || '09:00')
+    setFormEnd(endTime && endTime !== startTime ? endTime : '10:00')
     setFormSpace('')
     setFormSummary('')
     setFormAttendees([])
@@ -119,13 +127,17 @@ export default function CalendarPage() {
 
   const handleCreateReservation = async () => {
     if (!selectedSlot || !formSpace) return
+    if (formEnd <= formStart) {
+      addToast({ type: 'error', message: t('validation.endAfterStart') })
+      return
+    }
     setIsSubmitting(true)
     try {
       await createReservation.mutateAsync({
         spaceId: formSpace,
         date: selectedSlot.date,
-        startTime: selectedSlot.startStr.split('T')[1]?.slice(0, 5) || '09:00',
-        endTime: selectedSlot.endStr.split('T')[1]?.slice(0, 5) || '10:00',
+        startTime: formStart,
+        endTime: formEnd,
         summary: formSummary || undefined,
         attendeeIds: formAttendees.length > 0 ? formAttendees : undefined,
       })
@@ -134,17 +146,23 @@ export default function CalendarPage() {
       setFormSpace('')
       setFormSummary('')
       setFormAttendees([])
-      queryClient.invalidateQueries({ queryKey: ['org-reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['all-reservations'] })
     } catch {
       addToast({ type: 'error', message: t('calendar.reservationError') })
     }
     setIsSubmitting(false)
   }
 
+  // All reservations (any company) on the clicked day — fresh query per day.
+  const { data: dayReservationsData } = useDayReservations(
+    selectedSlot?.date ?? null
+  )
+  const dayReservations = dayReservationsData ?? []
+
   const availableSpaces = useMemo(() => {
-    if (!spaces || !selectedSlot) return []
-    const startISO = selectedSlot.startStr
-    const endISO = selectedSlot.endStr
+    if (!spaces || !selectedSlot || formEnd <= formStart) return []
+    const startISO = toUtcISOString(selectedSlot.date, formStart)
+    const endISO = toUtcISOString(selectedSlot.date, formEnd)
     const occupiedIds =
       reservations
         ?.filter(
@@ -157,7 +175,7 @@ export default function CalendarPage() {
     return spaces.filter(
       (s) => s.is_active && !occupiedIds.includes(s.id)
     )
-  }, [spaces, selectedSlot, reservations])
+  }, [spaces, selectedSlot, reservations, formStart, formEnd])
 
   const locale = t('calendar.mon') === 'Mon' ? 'en-US' : 'es-ES'
 
@@ -240,16 +258,77 @@ export default function CalendarPage() {
               <div className="space-y-4 text-sm">
                 <div className="rounded-lg bg-muted/50 p-3">
                   <p className="font-medium text-foreground">
-                    {new Date(selectedSlot.date).toLocaleDateString(locale, {
+                    {new Date(`${selectedSlot.date}T00:00`).toLocaleDateString(locale, {
+                      weekday: 'long',
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
                     })}
                   </p>
-                  <p className="mt-0.5 text-muted-foreground">
-                    {selectedSlot.startStr.split('T')[1]?.slice(0, 5) || '--'} -{' '}
-                    {selectedSlot.endStr.split('T')[1]?.slice(0, 5) || '--'}
+                </div>
+
+                <div>
+                  <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {t('calendar.dayReservations')}
                   </p>
+                  {dayReservations.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">{t('calendar.dayFree')}</p>
+                  ) : (
+                    <ul className="max-h-40 space-y-1.5 overflow-y-auto">
+                      {dayReservations.map((r) => (
+                        <li
+                          key={r.id}
+                          className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-medium text-foreground">
+                              {r.space?.name ?? '—'}
+                            </p>
+                            {r.profile?.full_name && (
+                              <p className="truncate text-[11px] text-muted-foreground">
+                                {r.profile.full_name}
+                              </p>
+                            )}
+                          </div>
+                          <span className="shrink-0 text-[11px] text-muted-foreground">
+                            {new Date(r.start_time).toLocaleTimeString(locale, {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                            –
+                            {new Date(r.end_time).toLocaleTimeString(locale, {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label={t('calendar.start')} htmlFor="calendar-start">
+                    <Input
+                      id="calendar-start"
+                      type="time"
+                      value={formStart}
+                      onChange={(e) => setFormStart(e.target.value)}
+                    />
+                  </FormField>
+                  <FormField
+                    label={t('calendar.end')}
+                    htmlFor="calendar-end"
+                    error={formEnd <= formStart ? t('validation.endAfterStart') : undefined}
+                  >
+                    <Input
+                      id="calendar-end"
+                      type="time"
+                      value={formEnd}
+                      invalid={formEnd <= formStart}
+                      onChange={(e) => setFormEnd(e.target.value)}
+                    />
+                  </FormField>
                 </div>
 
                 <div>
@@ -326,7 +405,7 @@ export default function CalendarPage() {
                 <Button
                   fullWidth
                   onClick={handleCreateReservation}
-                  disabled={!formSpace}
+                  disabled={!formSpace || formEnd <= formStart}
                   loading={isSubmitting}
                 >
                   {isSubmitting ? t('calendar.saving') : t('calendar.save')}
@@ -347,78 +426,64 @@ export default function CalendarPage() {
                 </Button>
               </div>
 
-              {(() => {
-                // Privacy (Req 7.7): a member may only see the space TYPE and
-                // time interval of other members' reservations — no personal
-                // data. Managers (and the owner) see full details.
-                const isAttendee =
-                  eventAttendees?.some((a) => a.id === profile?.id) ?? false
-                const isOwnEvent = selectedEvent.userId === profile?.id
-                const canSeeDetails = isOfficeManager || isOwnEvent || isAttendee
-                return (
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">{t('calendar.space')}</span>
-                      <p className="font-medium text-foreground">
-                        {canSeeDetails
-                          ? selectedEvent.spaceName || selectedEvent.title
-                          : selectedEvent.spaceType
-                            ? t(`spaceType.${selectedEvent.spaceType}`)
-                            : t('calendar.space')}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">{t('calendar.schedule')}</span>
-                      <p className="font-medium text-foreground">
-                        {new Date(selectedEvent.start).toLocaleTimeString(locale, {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}{' '}
-                        -{' '}
-                        {new Date(selectedEvent.end).toLocaleTimeString(locale, {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-                    {canSeeDetails && selectedEvent.summary && (
-                      <div>
-                        <span className="text-muted-foreground">{t('calendar.summary')}</span>
-                        <p className="text-foreground">{selectedEvent.summary}</p>
-                      </div>
-                    )}
-                    {isOfficeManager && selectedEvent.userName && (
-                      <div>
-                        <span className="text-muted-foreground">{t('calendar.reservedBy')}</span>
-                        <p className="text-foreground">{selectedEvent.userName}</p>
-                      </div>
-                    )}
-                    {canSeeDetails && eventAttendees && eventAttendees.length > 0 && (
-                      <div>
-                        <span className="text-muted-foreground">{t('calendar.attendees')}</span>
-                        <ul className="mt-1 space-y-0.5">
-                          {eventAttendees.map((a) => (
-                            <li key={a.id} className="text-foreground">
-                              {a.full_name}
-                              {a.id === profile?.id && (
-                                <span className="ml-1 text-xs text-muted-foreground">
-                                  {t('common.you')}
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    <div>
-                      <span className="text-muted-foreground">{t('calendar.status')}</span>
-                      <div className="mt-1">
-                        <Badge tone="success">{t('calendar.confirmed')}</Badge>
-                      </div>
-                    </div>
+              {/* Coworking compartido: todos ven los detalles completos. */}
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">{t('calendar.space')}</span>
+                  <p className="font-medium text-foreground">
+                    {selectedEvent.spaceName || selectedEvent.title}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('calendar.schedule')}</span>
+                  <p className="font-medium text-foreground">
+                    {new Date(selectedEvent.start).toLocaleTimeString(locale, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}{' '}
+                    -{' '}
+                    {new Date(selectedEvent.end).toLocaleTimeString(locale, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                {selectedEvent.summary && (
+                  <div>
+                    <span className="text-muted-foreground">{t('calendar.summary')}</span>
+                    <p className="text-foreground">{selectedEvent.summary}</p>
                   </div>
-                )
-              })()}
+                )}
+                {selectedEvent.userName && (
+                  <div>
+                    <span className="text-muted-foreground">{t('calendar.reservedBy')}</span>
+                    <p className="text-foreground">{selectedEvent.userName}</p>
+                  </div>
+                )}
+                {eventAttendees && eventAttendees.length > 0 && (
+                  <div>
+                    <span className="text-muted-foreground">{t('calendar.attendees')}</span>
+                    <ul className="mt-1 space-y-0.5">
+                      {eventAttendees.map((a) => (
+                        <li key={a.id} className="text-foreground">
+                          {a.full_name}
+                          {a.id === profile?.id && (
+                            <span className="ml-1 text-xs text-muted-foreground">
+                              {t('common.you')}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div>
+                  <span className="text-muted-foreground">{t('calendar.status')}</span>
+                  <div className="mt-1">
+                    <Badge tone="success">{t('calendar.confirmed')}</Badge>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}

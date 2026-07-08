@@ -26,10 +26,10 @@ export function useAvailableSpaces(params: ReservationSearchValues | null) {
 
       const occupiedIds = occupied?.map((r) => r.space_id) ?? []
 
+      // Coworking compartido: todos los espacios activos, sin filtrar por empresa.
       let query = supabase
         .from('spaces')
         .select('*')
-        .eq('org_id', profile!.org_id)
         .eq('is_active', true)
 
       if (occupiedIds.length > 0) {
@@ -90,22 +90,20 @@ export function useAlternativeSlots(
       const windowStart = new Date(reqStart.getTime() - DAY_MS)
       const windowEnd = new Date(reqEnd.getTime() + DAY_MS)
 
-      // Active spaces of the requested type
+      // Active spaces of the requested type (coworking-wide)
       let spacesQuery = supabase
         .from('spaces')
         .select('id')
-        .eq('org_id', profile.org_id)
         .eq('is_active', true)
       if (params.space_type) spacesQuery = spacesQuery.eq('type', params.space_type)
       const { data: spaces } = await spacesQuery
       const spaceIds = spaces?.map((s) => s.id) ?? []
       if (spaceIds.length === 0) return []
 
-      // Confirmed reservations intersecting the ±24h window
+      // Confirmed reservations intersecting the ±24h window (coworking-wide)
       const { data: res } = await supabase
         .from('reservations')
         .select('space_id, start_time, end_time')
-        .eq('org_id', profile.org_id)
         .eq('status', 'confirmed')
         .lt('start_time', windowEnd.toISOString())
         .gt('end_time', windowStart.toISOString())
@@ -195,7 +193,7 @@ export function useOrgReservations() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reservations')
-        .select('*, space:spaces(id, name, type, capacity), profile:profiles(id, full_name, email)')
+        .select('*, space:spaces(id, name, type, capacity), profile:profiles!reservations_user_id_fkey(id, full_name, email)')
         .eq('org_id', profile!.org_id)
         .order('start_time', { ascending: true })
 
@@ -224,6 +222,97 @@ export function useReservationAttendees(reservationId: string | null) {
         .filter((p): p is AttendeeProfile => !!p)
     },
     enabled: !!reservationId,
+  })
+}
+
+export function useDayReservations(
+  date: string | null,
+  spaceType?: string
+) {
+  const profile = useAuthStore((s) => s.profile)
+
+  return useQuery({
+    queryKey: ['day-reservations', date, spaceType ?? null],
+    queryFn: async () => {
+      if (!date) return []
+      const dayStart = new Date(`${date}T00:00`)
+      const dayEnd = new Date(dayStart)
+      dayEnd.setDate(dayEnd.getDate() + 1)
+
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*, space:spaces(id, name, type, capacity), profile:profiles!reservations_user_id_fkey(id, full_name, email)')
+        .eq('status', 'confirmed')
+        .gte('start_time', dayStart.toISOString())
+        .lt('start_time', dayEnd.toISOString())
+        .order('start_time', { ascending: true })
+
+      if (error) throw error
+      const rows = data as Reservation[]
+      return spaceType ? rows.filter((r) => r.space?.type === spaceType) : rows
+    },
+    enabled: !!date && !!profile?.id,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  })
+}
+
+// Find Spaces: sin fecha → trae TODAS las reservas del coworking; con fecha
+// (y/o tipo) filtra. Fecha y tipo son filtros opcionales.
+export function useSearchReservations(
+  params: { date?: string; spaceType?: string } | null
+) {
+  const profile = useAuthStore((s) => s.profile)
+
+  return useQuery({
+    queryKey: ['search-reservations', params?.date ?? null, params?.spaceType ?? null],
+    queryFn: async () => {
+      let query = supabase
+        .from('reservations')
+        .select('*, space:spaces(id, name, type, capacity), profile:profiles!reservations_user_id_fkey(id, full_name, email)')
+        .eq('status', 'confirmed')
+        .order('start_time', { ascending: true })
+
+      if (params?.date) {
+        const dayStart = new Date(`${params.date}T00:00`)
+        const dayEnd = new Date(dayStart)
+        dayEnd.setDate(dayEnd.getDate() + 1)
+        query = query
+          .gte('start_time', dayStart.toISOString())
+          .lt('start_time', dayEnd.toISOString())
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      const rows = data as Reservation[]
+      return params?.spaceType
+        ? rows.filter((r) => r.space?.type === params.spaceType)
+        : rows
+    },
+    enabled: !!params && !!profile?.id,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  })
+}
+
+export function useAllReservations() {
+  const profile = useAuthStore((s) => s.profile)
+
+  return useQuery({
+    queryKey: ['all-reservations'],
+    queryFn: async () => {
+      // Coworking compartido: todas las reservas de todas las empresas.
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*, space:spaces(id, name, type, capacity), profile:profiles!reservations_user_id_fkey(id, full_name, email)')
+        .order('start_time', { ascending: true })
+
+      if (error) throw error
+      return data as Reservation[]
+    },
+    enabled: !!profile?.id,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 }
 
@@ -300,6 +389,8 @@ export function useCreateReservation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-reservations'] })
       queryClient.invalidateQueries({ queryKey: ['org-reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['all-reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['day-reservations'] })
       queryClient.invalidateQueries({ queryKey: ['available-spaces'] })
     },
   })
@@ -320,6 +411,8 @@ export function useCancelReservation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-reservations'] })
       queryClient.invalidateQueries({ queryKey: ['org-reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['all-reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['day-reservations'] })
       queryClient.invalidateQueries({ queryKey: ['available-spaces'] })
     },
   })
