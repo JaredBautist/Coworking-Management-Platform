@@ -30,10 +30,11 @@ export function useCreateSpace() {
 
   return useMutation({
     mutationFn: async (values: SpaceFormValues) => {
+      if (!profile) throw new Error('No hay una sesión activa.')
       const { data, error } = await supabase
         .from('spaces')
         .insert({
-          org_id: profile!.org_id,
+          org_id: profile.org_id,
           name: values.name,
           type: values.type,
           capacity: values.capacity,

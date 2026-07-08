@@ -125,7 +125,7 @@ Implementación del frontend SPA de la Coworking Management Platform con React 1
     - **Validates: Requirements 5.2**
     - Archivo: `src/test/properties/overlap.property.test.ts`
   - [x]* 10.3 Escribir tests de propiedad para ignorar filtro de capacidad fuera de rango (Property 8)
-    - **Property 8: Ignorar filtro de capacidad fuera de rango**
+    - **Property 8: Ignorar filtro de capacidad fuera de r/home/balckyshadown/Escritorio/Coworking Management Platform/.kiroango**
     - **Validates: Requirements 5.3**
     - Archivo: `src/test/properties/overlap.property.test.ts`
   - [x]* 10.4 Escribir tests de propiedad para validación del schema de búsqueda (Property 9)

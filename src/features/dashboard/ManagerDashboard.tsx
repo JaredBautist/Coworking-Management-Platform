@@ -1,8 +1,36 @@
+import { type LucideIcon, Building2, CalendarCheck, TrendingUp } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { useSpaces } from '@/features/spaces/hooks'
 import { useOrgReservations } from '@/features/reservations/hooks'
 import { Link } from 'react-router-dom'
 import { SkeletonCard } from '@/components/shared/SkeletonCard'
+import { Card, buttonVariants } from '@/components/ui'
+
+function MetricCard({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: LucideIcon
+  label: string
+  value: string | number
+  tone: string
+}) {
+  return (
+    <Card className="p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${tone}`}>
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+        {value}
+      </p>
+    </Card>
+  )
+}
 
 export function ManagerDashboard() {
   const { t } = useI18n()
@@ -44,28 +72,29 @@ export function ManagerDashboard() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="card p-4" style={{ animationDelay: '0ms' }}>
-          <p className="text-sm text-muted-foreground">{t('dashboard.activeSpaces')}</p>
-          <p className="mt-1 text-3xl font-semibold text-foreground">{activeSpaces}</p>
-        </div>
-        <div className="card p-4" style={{ animationDelay: '80ms' }}>
-          <p className="text-sm text-muted-foreground">{t('dashboard.todayReservations')}</p>
-          <p className="mt-1 text-3xl font-semibold text-foreground">
-            {todayReservations.length}
-          </p>
-        </div>
-        <div className="card p-4" style={{ animationDelay: '160ms' }}>
-          <p className="text-sm text-muted-foreground">{t('dashboard.occupancyToday')}</p>
-          <p className="mt-1 text-3xl font-semibold text-foreground">{occupancyRate}%</p>
-        </div>
+        <MetricCard
+          icon={Building2}
+          label={t('dashboard.activeSpaces')}
+          value={activeSpaces}
+          tone="bg-primary/10 text-primary"
+        />
+        <MetricCard
+          icon={CalendarCheck}
+          label={t('dashboard.todayReservations')}
+          value={todayReservations.length}
+          tone="bg-secondary/10 text-secondary"
+        />
+        <MetricCard
+          icon={TrendingUp}
+          label={t('dashboard.occupancyToday')}
+          value={`${occupancyRate}%`}
+          tone="bg-success/10 text-success"
+        />
       </div>
-      <div className="mt-6">
-        <Link
-          to="/app/reports"
-          className="btn-ghost gap-2"
-        >
+      <div>
+        <Link to="/app/reports" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
           {t('dashboard.viewReports')}
         </Link>
       </div>

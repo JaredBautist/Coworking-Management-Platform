@@ -6,7 +6,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { useI18n } from '@/lib/i18n'
-import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher'
+import { AuthShell } from './AuthShell'
+import { FormField, Input, Button } from '@/components/ui'
 
 type SignUpFormData = {
   fullName: string
@@ -83,128 +84,88 @@ export default function SignUpPage() {
 
   if (sent) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-8 text-center shadow-sm">
-          <div className="mb-6 flex justify-end">
-            <LanguageSwitcher />
+      <AuthShell
+        title={t('auth.signup.successTitle')}
+        subtitle={t('auth.signup.successBody')}
+        center
+        footer={
+          <div className="text-center">
+            <Link to="/login" className="text-sm text-primary hover:underline">
+              {t('auth.signup.signIn')}
+            </Link>
           </div>
-          <h1 className="mb-4 text-2xl font-semibold text-primary">
-            {t('auth.signup.successTitle')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t('auth.signup.successBody')}
-          </p>
-          <Link
-            to="/login"
-            className="mt-6 inline-block text-sm text-primary hover:underline"
-          >
-            {t('auth.signup.signIn')}
-          </Link>
-        </div>
-      </div>
+        }
+      >
+        <span className="sr-only">{t('auth.signup.successTitle')}</span>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 shadow-sm">
-        <div className="mb-6 flex justify-end">
-          <LanguageSwitcher />
-        </div>
-        <h1 className="mb-2 text-2xl font-semibold text-primary">
-          {t('auth.signup.title')}
-        </h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          {t('auth.signup.subtitle')}
-        </p>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label htmlFor="full-name" className="block text-sm font-medium text-muted-foreground">
-              {t('auth.fullName')}
-            </label>
-            <input
-              id="full-name"
-              type="text"
-              autoComplete="name"
-              {...register('fullName')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-            />
-            {errors.fullName && (
-              <p className="mt-1 text-xs text-destructive">{errors.fullName.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="organization-name" className="block text-sm font-medium text-muted-foreground">
-              {t('auth.organizationName')}
-            </label>
-            <input
-              id="organization-name"
-              type="text"
-              autoComplete="organization"
-              {...register('organizationName')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-            />
-            {errors.organizationName && (
-              <p className="mt-1 text-xs text-destructive">{errors.organizationName.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">
-              {t('auth.email')}
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              {...register('email')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-            />
-            {errors.email && (
-              <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-muted-foreground">
-              {t('auth.password')}
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              {...register('password')}
-              className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-            />
-            {errors.password && (
-              <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-
-          {serverError && (
-            <div role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {serverError}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {isSubmitting ? t('auth.signup.submitting') : t('auth.signup.submit')}
-          </button>
-        </form>
-
-        <div className="mt-4 text-center text-sm text-muted-foreground">
+    <AuthShell
+      title={t('auth.signup.title')}
+      subtitle={t('auth.signup.subtitle')}
+      maxWidth="md"
+      footer={
+        <p className="text-center text-sm text-muted-foreground">
           {t('auth.signup.hasAccount')}{' '}
           <Link to="/login" className="text-primary hover:underline">
             {t('auth.signup.signIn')}
           </Link>
-        </div>
-      </div>
-    </div>
+        </p>
+      }
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <FormField label={t('auth.fullName')} htmlFor="full-name" error={errors.fullName?.message}>
+          <Input
+            id="full-name"
+            type="text"
+            autoComplete="name"
+            invalid={!!errors.fullName}
+            {...register('fullName')}
+          />
+        </FormField>
+
+        <FormField label={t('auth.organizationName')} htmlFor="organization-name" error={errors.organizationName?.message}>
+          <Input
+            id="organization-name"
+            type="text"
+            autoComplete="organization"
+            invalid={!!errors.organizationName}
+            {...register('organizationName')}
+          />
+        </FormField>
+
+        <FormField label={t('auth.email')} htmlFor="email" error={errors.email?.message}>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            invalid={!!errors.email}
+            {...register('email')}
+          />
+        </FormField>
+
+        <FormField label={t('auth.password')} htmlFor="password" error={errors.password?.message}>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            invalid={!!errors.password}
+            {...register('password')}
+          />
+        </FormField>
+
+        {serverError && (
+          <div role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {serverError}
+          </div>
+        )}
+
+        <Button type="submit" fullWidth loading={isSubmitting}>
+          {isSubmitting ? t('auth.signup.submitting') : t('auth.signup.submit')}
+        </Button>
+      </form>
+    </AuthShell>
   )
 }

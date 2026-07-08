@@ -1,4 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react'
+import { AlertTriangle } from 'lucide-react'
+import { EmptyState, Button } from '@/components/ui'
 
 interface Props {
   children: ReactNode
@@ -33,19 +35,19 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback
 
       return (
-        <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
-          <p className="text-lg font-medium text-destructive">
-            Algo salió mal
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {this.state.error?.message ?? 'Ocurrió un error inesperado.'}
-          </p>
-          <button
-            onClick={this.handleRetry}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
-          >
-            Reintentar
-          </button>
+        <div className="flex min-h-[400px] items-center justify-center p-6">
+          <EmptyState
+            icon={AlertTriangle}
+            title="Something went wrong"
+            description={
+              this.state.error?.message ?? 'An unexpected error occurred.'
+            }
+            action={
+              <Button variant="primary" onClick={this.handleRetry}>
+                Retry
+              </Button>
+            }
+          />
         </div>
       )
     }

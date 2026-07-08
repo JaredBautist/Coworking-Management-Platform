@@ -185,6 +185,11 @@ CREATE POLICY "Ver mi organización"
   ON organizations FOR SELECT
   USING (id IN (SELECT org_id FROM profiles WHERE id = auth.uid()));
 
+-- El office_manager puede renombrar su propia organización (usado en onboarding).
+CREATE POLICY "Manager actualiza su organización"
+  ON organizations FOR UPDATE
+  USING (id = public.user_org_id() AND public.user_role() = 'office_manager');
+
 -- ============================================
 -- POLÍTICAS RLS: PROFILES
 -- ============================================

@@ -3,6 +3,16 @@ import { useMyReservations, useCancelReservation } from './hooks'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { useUIStore } from '@/stores/uiStore'
 import { useI18n } from '@/lib/i18n'
+import { CalendarClock, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Badge,
+  Button,
+  EmptyState,
+} from '@/components/ui'
 
 export default function ReservationsPage() {
   const { t } = useI18n()
@@ -42,108 +52,105 @@ export default function ReservationsPage() {
 
   const currentList = tab === 'upcoming' ? upcoming : past
 
+  const tabs: Array<{ key: 'upcoming' | 'past'; label: string; count: number }> = [
+    { key: 'upcoming', label: t('reservations.upcoming'), count: upcoming.length },
+    { key: 'past', label: t('reservations.past'), count: past.length },
+  ]
+
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-foreground">{t('reservations.myReservations')}</h1>
+      <PageHeader title={t('reservations.myReservations')} />
 
-      <div className="mb-4 flex gap-2">
-        <button
-          onClick={() => setTab('upcoming')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 ${
-            tab === 'upcoming'
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80 active:scale-[0.97]'
-          }`}
-        >
-          {t('reservations.upcoming')} ({upcoming.length})
-        </button>
-        <button
-          onClick={() => setTab('past')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 ${
-            tab === 'past'
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80 active:scale-[0.97]'
-          }`}
-        >
-          {t('reservations.past')} ({past.length})
-        </button>
+      <div className="mb-5 inline-flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1">
+        {tabs.map((tItem) => (
+          <button
+            key={tItem.key}
+            onClick={() => setTab(tItem.key)}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+              tab === tItem.key
+                ? 'bg-surface text-foreground shadow-soft'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {tItem.label} ({tItem.count})
+          </button>
+        ))}
       </div>
 
       {isLoading && <SkeletonTable rows={5} />}
 
       {!isLoading && currentList.length === 0 && (
-        <div className="card p-8 text-center">
-          <p className="text-muted-foreground">
-            {tab === 'upcoming'
+        <EmptyState
+          icon={CalendarClock}
+          title={
+            tab === 'upcoming'
               ? t('reservations.noUpcoming')
-              : t('reservations.noPast')}
-          </p>
-        </div>
+              : t('reservations.noPast')
+          }
+          description={tab === 'upcoming' ? t('reservations.upcomingHint') : undefined}
+        />
       )}
 
-      {!isLoading &&
-        currentList.map((reservation) => {
-          const isFuture = reservation.start_time > now
-          const isConfirmed = reservation.status === 'confirmed'
-          const canCancel = isFuture && isConfirmed
+      {!isLoading && currentList.length > 0 && (
+        <div className="space-y-3">
+          {currentList.map((reservation) => {
+            const isFuture = reservation.start_time > now
+            const isConfirmed = reservation.status === 'confirmed'
+            const canCancel = isFuture && isConfirmed
 
-          return (
-            <div
-              key={reservation.id}
-              className="card mb-3 p-4"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">
-                    {reservation.space?.name ?? t('reports.space')}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {new Date(reservation.start_time).toLocaleDateString(
-                      'es-ES',
-                      {
+            return (
+              <Card key={reservation.id}>
+                <CardContent className="flex items-start justify-between p-4">
+                  <div>
+                    <h3 className="font-medium text-foreground">
+                      {reservation.space?.name ?? t('reports.space')}
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {new Date(reservation.start_time).toLocaleDateString('es-ES', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
+                      })}{' '}
+                      ·{' '}
+                      {new Date(reservation.start_time).toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}{' '}
+                      -{' '}
+                      {new Date(reservation.end_time).toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                    <Badge
+                      tone={reservation.status === 'confirmed' ? 'success' : 'neutral'}
+                      className="mt-2"
+                    >
+                      {reservation.status === 'confirmed'
+                        ? t('reservations.confirmed')
+                        : t('reservations.cancelled')}
+                    </Badge>
+                  </div>
+                  {canCancel && (
+                    <Button
+                      variant="destructive-ghost"
+                      size="sm"
+                      onClick={() =>
+                        handleCancel(reservation.id, reservation.start_time)
                       }
-                    )}{' '}
-                    ·{' '}
-                    {new Date(reservation.start_time).toLocaleTimeString(
-                      'es-ES',
-                      { hour: '2-digit', minute: '2-digit' }
-                    )}{' '}
-                    -{' '}
-                    {new Date(reservation.end_time).toLocaleTimeString(
-                      'es-ES',
-                      { hour: '2-digit', minute: '2-digit' }
-                    )}
-                  </p>
-                  <span
-                    className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                      reservation.status === 'confirmed'
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {reservation.status === 'confirmed'
-                      ? t('reservations.confirmed')
-                      : t('reservations.cancelled')}
-                  </span>
-                </div>
-                {canCancel && (
-                  <button
-                    onClick={() =>
-                      handleCancel(reservation.id, reservation.start_time)
-                    }
-                    disabled={cancelReservation.isPending}
-                    className="btn-ghost text-destructive hover:bg-destructive/10"
-                  >
-                    {t('reservations.cancel')}
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        })}
+                      disabled={cancelReservation.isPending}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      {t('reservations.cancel')}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

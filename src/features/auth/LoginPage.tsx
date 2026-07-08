@@ -6,7 +6,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { useI18n } from '@/lib/i18n'
-import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher'
+import { AuthShell } from './AuthShell'
+import { FormField, Input, Button } from '@/components/ui'
 
 type LoginFormData = {
   email: string
@@ -108,98 +109,64 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,#FAFBFC_0%,#EEF2FF_100%)] p-4">
-      <div className="animate-fade-in-up w-full max-w-sm rounded-xl border border-border bg-surface p-8 shadow-elevated">
-        <div className="mb-6 flex justify-end">
-          <LanguageSwitcher />
-        </div>
-        <h1 className="mb-1 text-2xl font-semibold text-foreground">
-          {t('auth.login.title')}
-        </h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          {t('app.name')}
-        </p>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-foreground"
-            >
-              {t('auth.email')}
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              disabled={isLocked}
-              {...register('email')}
-              className="input-field mt-1.5"
-            />
-            {errors.email && (
-              <p className="mt-1.5 text-xs text-destructive">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-foreground"
-            >
-              {t('auth.password')}
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              disabled={isLocked}
-              {...register('password')}
-              className="input-field mt-1.5"
-            />
-            {errors.password && (
-              <p className="mt-1.5 text-xs text-destructive">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
-
-          {serverError && (
-            <div
-              role="alert"
-              className="animate-fade-in rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
-            >
-              {isLocked && countdown > 0
-                ? t('auth.login.locked', { time: formatCountdown(countdown) })
-                : serverError}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isSubmitting || isLocked}
-            className="btn-primary w-full"
-          >
-            {isSubmitting ? t('auth.login.submitting') : t('auth.login.submit')}
-          </button>
-        </form>
-
-        <div className="mt-4 text-center">
+    <AuthShell
+      title={t('auth.login.title')}
+      subtitle={t('app.name')}
+      footer={
+        <div className="space-y-3 text-center">
           <Link
             to="/forgot-password"
-            className="text-sm text-primary hover:underline"
+            className="block text-sm text-primary hover:underline"
           >
             {t('auth.login.forgot')}
           </Link>
+          <p className="text-sm text-muted-foreground">
+            {t('auth.login.noAccount')}{' '}
+            <Link to="/signup" className="text-primary hover:underline">
+              {t('auth.login.createAccount')}
+            </Link>
+          </p>
         </div>
-        <div className="mt-3 text-center text-sm text-muted-foreground">
-          {t('auth.login.noAccount')}{' '}
-          <Link to="/signup" className="text-primary hover:underline">
-            {t('auth.login.createAccount')}
-          </Link>
-        </div>
-      </div>
-    </div>
+      }
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <FormField label={t('auth.email')} htmlFor="email" error={errors.email?.message}>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            disabled={isLocked}
+            invalid={!!errors.email}
+            {...register('email')}
+          />
+        </FormField>
+
+        <FormField label={t('auth.password')} htmlFor="password" error={errors.password?.message}>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            disabled={isLocked}
+            invalid={!!errors.password}
+            {...register('password')}
+          />
+        </FormField>
+
+        {serverError && (
+          <div
+            role="alert"
+            className="animate-fade-in rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            {isLocked && countdown > 0
+              ? t('auth.login.locked', { time: formatCountdown(countdown) })
+              : serverError}
+          </div>
+        )}
+
+        <Button type="submit" fullWidth loading={isSubmitting} disabled={isLocked}>
+          {isSubmitting ? t('auth.login.submitting') : t('auth.login.submit')}
+        </Button>
+      </form>
+    </AuthShell>
   )
 }

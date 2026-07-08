@@ -7,6 +7,12 @@ import { ToastContainer } from '@/components/shared/Toast'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { useAuth } from '@/hooks/useAuth'
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout'
+import { useTheme } from '@/hooks/useTheme'
+
+function ThemeProvider({ children }: { children: ReactNode }) {
+  useTheme()
+  return <>{children}</>
+}
 
 function AuthProvider({ children }: { children: ReactNode }) {
   useAuth()
@@ -21,14 +27,16 @@ function InactivityProvider({ children }: { children: ReactNode }) {
 export function Providers() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <InactivityProvider>
-            <RouterProvider router={router} />
-            <ToastContainer />
-          </InactivityProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <InactivityProvider>
+              <RouterProvider router={router} />
+              <ToastContainer />
+            </InactivityProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }

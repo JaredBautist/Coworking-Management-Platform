@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
+import { toUtcISOString } from '@/lib/utils'
 import type { Reservation, Space } from '@/types'
 import type { ReservationSearchValues } from './schemas'
 
@@ -11,8 +12,8 @@ export function useAvailableSpaces(params: ReservationSearchValues | null) {
     queryKey: ['available-spaces', profile?.org_id, params],
     queryFn: async () => {
       if (!params) return []
-      const startISO = `${params.date}T${params.start_time}:00`
-      const endISO = `${params.date}T${params.end_time}:00`
+      const startISO = toUtcISOString(params.date, params.start_time)
+      const endISO = toUtcISOString(params.date, params.end_time)
 
       const { data: occupied } = await supabase
         .from('reservations')
@@ -112,8 +113,10 @@ export function useCreateReservation() {
       endTime: string
       summary?: string
     }) => {
-      const startISO = `${date}T${startTime}:00`
-      const endISO = `${date}T${endTime}:00`
+      if (!profile) throw new Error('El espacio ya no está disponible')
+
+      const startISO = toUtcISOString(date, startTime)
+      const endISO = toUtcISOString(date, endTime)
 
       const { data: conflict } = await supabase
         .from('reservations')
@@ -130,9 +133,9 @@ export function useCreateReservation() {
       const { data, error } = await supabase
         .from('reservations')
         .insert({
-          org_id: profile!.org_id,
+          org_id: profile.org_id,
           space_id: spaceId,
-          user_id: profile!.id,
+          user_id: profile.id,
           start_time: startISO,
           end_time: endISO,
           status: 'confirmed',
@@ -141,7 +144,15 @@ export function useCreateReservation() {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        // The DB EXCLUDE constraint (23P01) is the atomic guard against a
+        // concurrent overlap the pre-check missed — surface it as the same
+        // "space unavailable" message the UI already handles.
+        if (error.code === '23P01') {
+          throw new Error('El espacio ya no está disponible')
+        }
+        throw error
+      }
       return data as Reservation
     },
     onSuccess: () => {

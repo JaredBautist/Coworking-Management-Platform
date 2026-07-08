@@ -5,8 +5,23 @@ import { useRole } from '@/hooks/useRole'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useUIStore } from '@/stores/uiStore'
 import { useI18n } from '@/lib/i18n'
+import { Search, Users } from 'lucide-react'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import {
+  PageHeader,
+  Input,
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+  Badge,
+  Select,
+  EmptyState,
+  DataTablePagination,
+} from '@/components/ui'
 
 const ITEMS_PER_PAGE = 25
 
@@ -89,61 +104,56 @@ export default function TeamPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">{t('nav.team')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('team.total', { count: String(members?.length ?? 0) })}
-          </p>
-        </div>
-        <input
-          type="text"
-          placeholder={t('team.searchPlaceholder')}
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(1)
-          }}
-          className="input-field max-w-xs"
-        />
-      </div>
+      <PageHeader
+        title={t('nav.team')}
+        subtitle={t('team.total', { count: String(members?.length ?? 0) })}
+        actions={
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={t('team.searchPlaceholder')}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
+              className="w-full pl-9 sm:w-72"
+            />
+          </div>
+        }
+      />
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border bg-muted">
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                {t('common.name')}
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                {t('team.email')}
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                {t('team.role')}
-              </th>
-              {isOfficeManager && <th className="px-4 py-3" />}
-            </tr>
-          </thead>
-          <tbody>
+      {paginated.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title={t('team.empty')}
+          description={t('team.emptyHint')}
+        />
+      ) : (
+        <Table>
+          <THead>
+            <TR>
+              <TH>{t('common.name')}</TH>
+              <TH>{t('team.email')}</TH>
+              <TH>{t('team.role')}</TH>
+            </TR>
+          </THead>
+          <TBody>
             {paginated.map((member) => (
-              <tr
-                key={member.id}
-                className="border-b border-border last:border-0 transition-colors hover:bg-muted/50"
-              >
-                <td className="px-4 py-3 text-sm font-medium text-foreground">
+              <TR key={member.id} hoverable>
+                <TD className="font-medium">
                   {member.full_name}
                   {member.id === currentProfile?.id && (
                     <span className="ml-2 text-xs text-muted-foreground">
                       {t('common.you')}
                     </span>
                   )}
-                </td>
-                <td className="px-4 py-3 text-sm text-muted-foreground">
-                  {member.email}
-                </td>
-                <td className="px-4 py-3">
+                </TD>
+                <TD className="text-muted-foreground">{member.email}</TD>
+                <TD>
                   {isOfficeManager && member.id !== currentProfile?.id ? (
-                    <select
+                    <Select
                       value={member.role}
                       onChange={(e) =>
                         handleRoleChange(
@@ -151,64 +161,30 @@ export default function TeamPage() {
                           e.target.value as 'office_manager' | 'member'
                         )
                       }
-                      className="input-field px-2 py-1"
+                      className="h-8 w-40 py-1 text-xs"
                     >
                       <option value="member">{t('team.member')}</option>
                       <option value="office_manager">{t('team.admin')}</option>
-                    </select>
+                    </Select>
                   ) : (
-                    <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                        member.role === 'office_manager'
-                          ? 'bg-accent/10 text-accent'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
+                    <Badge tone={member.role === 'office_manager' ? 'accent' : 'neutral'}>
                       {member.role === 'office_manager'
                         ? t('team.administrator')
                         : t('team.member')}
-                    </span>
+                    </Badge>
                   )}
-                </td>
-              </tr>
+                </TD>
+              </TR>
             ))}
-            {paginated.length === 0 && (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="px-4 py-8 text-center text-sm text-muted-foreground"
-                >
-                  {t('team.empty')}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {t('common.pageOf', { page: String(page), total: String(totalPages) })}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="btn-ghost border border-border"
-            >
-              {t('common.previous')}
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="btn-ghost border border-border"
-            >
-              {t('common.next')}
-            </button>
-          </div>
-        </div>
+          </TBody>
+        </Table>
       )}
+
+      <DataTablePagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       <ConfirmDialog
         open={!!selfDemoteTarget}

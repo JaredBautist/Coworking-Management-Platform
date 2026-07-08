@@ -1,5 +1,6 @@
 import { useI18n } from '@/lib/i18n'
 import { useRole } from '@/hooks/useRole'
+import { PageHeader } from '@/components/ui'
 import { ManagerDashboard } from './ManagerDashboard'
 import { MemberDashboard } from './MemberDashboard'
 
@@ -9,7 +10,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">{t('nav.dashboard')}</h1>
+      <PageHeader title={t('nav.dashboard')} />
       {isOfficeManager ? <ManagerDashboard /> : <MemberDashboard />}
     </div>
   )
