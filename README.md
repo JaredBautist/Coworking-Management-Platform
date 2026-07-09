@@ -12,7 +12,7 @@ track utilization — all in a fast, accessible single-page app.
 
 ## 🔗 Live demo
 
-- **App:** `<YOUR_VERCEL_URL>`  <!-- e.g. https://coworking-management-platform.vercel.app -->
+- **App:** https://coworking-management-platform.vercel.app
 - **Repository:** https://github.com/JaredBautist/Coworking-Management-Platform
 
 ### Try it in 2 minutes
