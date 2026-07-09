@@ -50,8 +50,9 @@ track utilization — all in a fast, accessible single-page app.
 - **Availability & conflict prevention** — exact overlap detection in the client,
   backed by a Postgres `EXCLUDE` constraint so two confirmed bookings can never
   share a space + time slot (even across companies).
-- **Shared coworking visibility** — all authenticated users see every company's
-  spaces and reservations for coordination; realtime keeps it in sync.
+- **Shared visibility, private booking** — every company **sees** all
+  reservations across the coworking (realtime) to coordinate and avoid clashes,
+  but each company **books and manages only its own spaces**.
 - **Calendar** — FullCalendar day/week/month views; own vs. other bookings are
   color-coded; business hours (08:00–20:00) highlighted; click a day to see all
   reservations that day before booking.
@@ -193,8 +194,9 @@ src/
 **Key decisions & tradeoffs**
 - **Supabase as BaaS** to maximize speed/security in 72h (auth, DB, realtime, RLS
   out of the box) — at the cost of vendor lock-in.
-- **Shared cross-company visibility** for coordination — at the cost of exposing
-  some data (names/emails) across companies via relaxed RLS.
+- **Shared reservation visibility, private space ownership** — companies see all
+  bookings to coordinate but only book/manage their own spaces; the cost is
+  exposing some booking data (names) across companies via relaxed read RLS.
 - **Google Calendar via `.ics` + deep link** instead of full OAuth — 80% of the
   value with none of the setup friction.
 - **Statistical forecast** (weekday pattern + trend) instead of heavy ML —

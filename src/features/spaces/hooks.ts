@@ -53,27 +53,6 @@ export function useCreateSpace() {
   })
 }
 
-export function useActiveSpaces() {
-  const profile = useAuthStore((s) => s.profile)
-
-  return useQuery({
-    queryKey: ['active-spaces'],
-    queryFn: async () => {
-      // Coworking compartido: todos los espacios activos, de cualquier empresa.
-      const { data, error } = await supabase
-        .from('spaces')
-        .select('*')
-        .eq('is_active', true)
-        .order('name')
-
-      if (error) throw error
-      return data as Space[]
-    },
-    enabled: !!profile?.id,
-    staleTime: 30_000,
-  })
-}
-
 export function useDeleteSpace() {
   const queryClient = useQueryClient()
 

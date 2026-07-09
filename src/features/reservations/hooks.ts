@@ -26,10 +26,12 @@ export function useAvailableSpaces(params: ReservationSearchValues | null) {
 
       const occupiedIds = occupied?.map((r) => r.space_id) ?? []
 
-      // Coworking compartido: todos los espacios activos, sin filtrar por empresa.
+      // Cada empresa reserva solo sus propios espacios (la visibilidad de
+      // reservas sí es compartida, para coordinar).
       let query = supabase
         .from('spaces')
         .select('*')
+        .eq('org_id', profile!.org_id)
         .eq('is_active', true)
 
       if (occupiedIds.length > 0) {
@@ -90,10 +92,11 @@ export function useAlternativeSlots(
       const windowStart = new Date(reqStart.getTime() - DAY_MS)
       const windowEnd = new Date(reqEnd.getTime() + DAY_MS)
 
-      // Active spaces of the requested type (coworking-wide)
+      // Active spaces of the requested type — only the user's own company.
       let spacesQuery = supabase
         .from('spaces')
         .select('id')
+        .eq('org_id', profile.org_id)
         .eq('is_active', true)
       if (params.space_type) spacesQuery = spacesQuery.eq('type', params.space_type)
       const { data: spaces } = await spacesQuery

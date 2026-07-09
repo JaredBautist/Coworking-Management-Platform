@@ -305,9 +305,17 @@ CREATE POLICY "Ver reservas del coworking"
   ON reservations FOR SELECT
   USING (auth.uid() IS NOT NULL);
 
+-- El usuario solo puede reservar espacios de SU propia empresa.
 CREATE POLICY "Usuario crea sus propias reservas"
   ON reservations FOR INSERT
-  WITH CHECK (org_id = public.user_org_id() AND user_id = auth.uid());
+  WITH CHECK (
+    org_id = public.user_org_id()
+    AND user_id = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.spaces s
+      WHERE s.id = space_id AND s.org_id = public.user_org_id()
+    )
+  );
 
 CREATE POLICY "Usuario o manager cancela reservas"
   ON reservations FOR UPDATE

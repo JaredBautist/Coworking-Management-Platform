@@ -5,7 +5,7 @@ import {
   useReservationAttendees,
   useDayReservations,
 } from '@/features/reservations/hooks'
-import { useActiveSpaces } from '@/features/spaces/hooks'
+import { useSpaces } from '@/features/spaces/hooks'
 import { useTeamMembers } from '@/features/team/hooks'
 import { toUtcISOString } from '@/lib/utils'
 import { AddToCalendar } from '@/components/shared/AddToCalendar'
@@ -35,7 +35,7 @@ export default function CalendarPage() {
   const { t } = useI18n()
   const profile = useAuthStore((s) => s.profile)
   const { data: reservations, isLoading } = useAllReservations()
-  const { data: spaces } = useActiveSpaces()
+  const { data: spaces } = useSpaces()
   const { data: orgMembers } = useTeamMembers()
   const createReservation = useCreateReservation()
   const addToast = useUIStore((s) => s.addToast)
