@@ -193,12 +193,6 @@ export default function SearchPage() {
                       <p className="mt-1 text-sm text-muted-foreground">
                         {fmtTime(r.start_time)} – {fmtTime(r.end_time)}
                       </p>
-                      {r.profile?.full_name && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          {t('search.reservedByLabel')}:{' '}
-                          <span className="text-foreground">{r.profile.full_name}</span>
-                        </p>
-                      )}
                     </CardContent>
                   </Card>
                 ))}

@@ -53,7 +53,6 @@ export default function CalendarPage() {
     start: string
     end: string
     summary?: string
-    userName?: string
     userId?: string
     spaceName?: string
     spaceType?: SpaceType
@@ -84,7 +83,6 @@ export default function CalendarPage() {
             spaceName: r.space?.name,
             spaceType: r.space?.type,
             summary: r.summary,
-            userName: r.profile?.full_name,
             userId: r.user_id,
           },
         }
@@ -118,7 +116,6 @@ export default function CalendarPage() {
       start: clickInfo.event.startStr,
       end: clickInfo.event.endStr,
       summary: props.summary,
-      userName: props.userName,
       userId: props.userId,
       spaceName: props.spaceName,
       spaceType: props.spaceType,
@@ -191,7 +188,7 @@ export default function CalendarPage() {
   return (
     <div>
       <PageHeader title={t('calendar.title')} />
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row">
         <div className="min-w-0 flex-1">
           <Card>
             <CardContent className="p-4">
@@ -247,7 +244,7 @@ export default function CalendarPage() {
 
         {/* Create reservation panel */}
         {selectedSlot && (
-          <Card className="panel-enter w-80 shrink-0 self-start">
+          <Card className="panel-enter w-full lg:w-80 lg:shrink-0 lg:self-start">
             <CardContent className="p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-semibold text-foreground">{t('calendar.newReservation')}</h2>
@@ -285,11 +282,6 @@ export default function CalendarPage() {
                             <p className="truncate text-xs font-medium text-foreground">
                               {r.space?.name ?? '—'}
                             </p>
-                            {r.profile?.full_name && (
-                              <p className="truncate text-[11px] text-muted-foreground">
-                                {r.profile.full_name}
-                              </p>
-                            )}
                           </div>
                           <span className="shrink-0 text-[11px] text-muted-foreground">
                             {new Date(r.start_time).toLocaleTimeString(locale, {
@@ -418,7 +410,7 @@ export default function CalendarPage() {
 
         {/* Event detail panel */}
         {selectedEvent && !selectedSlot && (
-          <Card className="panel-enter w-80 shrink-0 self-start">
+          <Card className="panel-enter w-full lg:w-80 lg:shrink-0 lg:self-start">
             <CardContent className="p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-semibold text-foreground">{t('calendar.details')}</h2>
@@ -453,12 +445,6 @@ export default function CalendarPage() {
                   <div>
                     <span className="text-muted-foreground">{t('calendar.summary')}</span>
                     <p className="text-foreground">{selectedEvent.summary}</p>
-                  </div>
-                )}
-                {selectedEvent.userName && (
-                  <div>
-                    <span className="text-muted-foreground">{t('calendar.reservedBy')}</span>
-                    <p className="text-foreground">{selectedEvent.userName}</p>
                   </div>
                 )}
                 {eventAttendees && eventAttendees.length > 0 && (

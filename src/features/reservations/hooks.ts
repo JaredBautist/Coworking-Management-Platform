@@ -196,7 +196,7 @@ export function useOrgReservations() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reservations')
-        .select('*, space:spaces(id, name, type, capacity), profile:profiles!reservations_user_id_fkey(id, full_name, email)')
+        .select('*, space:spaces(id, name, type, capacity)')
         .eq('org_id', profile!.org_id)
         .order('start_time', { ascending: true })
 
@@ -244,7 +244,7 @@ export function useDayReservations(
 
       const { data, error } = await supabase
         .from('reservations')
-        .select('*, space:spaces(id, name, type, capacity), profile:profiles!reservations_user_id_fkey(id, full_name, email)')
+        .select('*, space:spaces(id, name, type, capacity)')
         .eq('status', 'confirmed')
         .gte('start_time', dayStart.toISOString())
         .lt('start_time', dayEnd.toISOString())
@@ -272,7 +272,7 @@ export function useSearchReservations(
     queryFn: async () => {
       let query = supabase
         .from('reservations')
-        .select('*, space:spaces(id, name, type, capacity), profile:profiles!reservations_user_id_fkey(id, full_name, email)')
+        .select('*, space:spaces(id, name, type, capacity)')
         .eq('status', 'confirmed')
         .order('start_time', { ascending: true })
 
@@ -307,7 +307,7 @@ export function useAllReservations() {
       // Coworking compartido: todas las reservas de todas las empresas.
       const { data, error } = await supabase
         .from('reservations')
-        .select('*, space:spaces(id, name, type, capacity), profile:profiles!reservations_user_id_fkey(id, full_name, email)')
+        .select('*, space:spaces(id, name, type, capacity)')
         .order('start_time', { ascending: true })
 
       if (error) throw error

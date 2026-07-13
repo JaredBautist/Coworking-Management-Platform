@@ -13,6 +13,7 @@ import {
   BarChart3,
   Search,
   Boxes,
+  X,
 } from 'lucide-react'
 
 type NavItem = {
@@ -43,7 +44,7 @@ const navSections: Array<{ titleKey: TranslationKey; items: NavItem[] }> = [
   },
 ]
 
-export function Sidebar() {
+function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const { role } = useRole()
   const { t } = useI18n()
   const profile = useAuthStore((s) => s.profile)
@@ -56,7 +57,7 @@ export function Sidebar() {
     .filter((section) => section.items.length > 0)
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-surface">
+    <>
       <div className="flex h-16 items-center gap-2 border-b border-border px-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Boxes className="h-5 w-5" />
@@ -75,6 +76,7 @@ export function Sidebar() {
                 key={item.to}
                 to={item.to}
                 end={item.end}
+                onClick={onNavClick}
                 className={({ isActive }) =>
                   cn(
                     'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
@@ -117,6 +119,45 @@ export function Sidebar() {
           </div>
         </div>
       )}
-    </aside>
+    </>
+  )
+}
+
+export function Sidebar({
+  mobileOpen,
+  onClose,
+}: {
+  mobileOpen: boolean
+  onClose: () => void
+}) {
+  const { t } = useI18n()
+
+  return (
+    <>
+      {/* Desktop: static sidebar */}
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile: slide-in drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+            onClick={onClose}
+          />
+          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[85%] flex-col border-r border-border bg-surface shadow-elevated animate-scale-in">
+            <button
+              onClick={onClose}
+              aria-label={t('common.close')}
+              className="absolute right-3 top-4 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <SidebarContent onNavClick={onClose} />
+          </aside>
+        </div>
+      )}
+    </>
   )
 }

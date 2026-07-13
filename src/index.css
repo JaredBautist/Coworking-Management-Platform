@@ -390,4 +390,54 @@
   .fc .fc-more-popover {
     @apply !shadow-elevated;
   }
+
+  /* ── Mobile: comfortable, fast scheduling on small screens ── */
+  @media (max-width: 640px) {
+    /* Stack the toolbar (nav · title · views) cleanly and center it */
+    .fc .fc-toolbar.fc-header-toolbar {
+      @apply flex-col items-center gap-2;
+    }
+
+    .fc .fc-toolbar-title {
+      @apply text-center text-sm;
+    }
+
+    .fc .fc-toolbar-chunk {
+      @apply flex flex-wrap justify-center gap-1;
+    }
+
+    /* Bigger touch targets for the buttons */
+    .fc .fc-button {
+      @apply px-3 py-2 text-xs;
+      min-height: 40px;
+    }
+
+    /* Denser headers and day numbers so more fits */
+    .fc .fc-col-header-cell {
+      @apply px-0.5 py-1.5 text-[0.6rem] tracking-normal;
+    }
+
+    .fc .fc-daygrid-day-number {
+      @apply text-[0.65rem];
+    }
+
+    /* Compact events; hide the time in month view to save width */
+    .fc .fc-daygrid-event {
+      @apply mx-0.5 px-1 py-0.5 text-[0.65rem];
+    }
+
+    .fc .fc-daygrid-event .fc-event-time {
+      @apply hidden;
+    }
+
+    /* Time-grid: smaller labels, slightly taller rows for touch */
+    .fc .fc-timegrid-axis-cushion,
+    .fc .fc-timegrid-slot-label-cushion {
+      @apply text-[0.6rem];
+    }
+
+    .fc .fc-timegrid-slot {
+      @apply h-9;
+    }
+  }
 }

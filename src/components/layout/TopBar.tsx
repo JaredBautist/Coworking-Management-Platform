@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase/client'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut } from 'lucide-react'
+import { LogOut, Menu } from 'lucide-react'
 import { useI18n, type TranslationKey } from '@/lib/i18n'
 import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
@@ -19,7 +19,7 @@ function usePageTitleKey(pathname: string): TranslationKey {
   return 'nav.dashboard'
 }
 
-export function TopBar() {
+export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const profile = useAuthStore((s) => s.profile)
   const navigate = useNavigate()
   const location = useLocation()
@@ -31,14 +31,25 @@ export function TopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-surface/80 px-6 backdrop-blur">
-      <h1 className="text-base font-semibold text-foreground">
-        {t(usePageTitleKey(location.pathname))}
-      </h1>
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 border-b border-border bg-surface/80 px-4 backdrop-blur sm:px-6">
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          onClick={onMenuClick}
+          aria-label={t('nav.dashboard')}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <h1 className="truncate text-base font-semibold text-foreground">
+          {t(usePageTitleKey(location.pathname))}
+        </h1>
+      </div>
+      <div className="flex items-center gap-2 sm:gap-3">
         <ThemeToggle />
-        <LanguageSwitcher />
-        <div className="h-6 w-px bg-border" />
+        <div className="hidden sm:block">
+          <LanguageSwitcher />
+        </div>
+        <div className="hidden h-6 w-px bg-border sm:block" />
         <Button
           variant="ghost"
           size="sm"
@@ -46,7 +57,7 @@ export function TopBar() {
           aria-label={profile ? `${t('common.logout')} — ${profile.full_name}` : t('common.logout')}
         >
           <LogOut className="h-4 w-4" />
-          {t('common.logout')}
+          <span className="hidden sm:inline">{t('common.logout')}</span>
         </Button>
       </div>
     </header>
